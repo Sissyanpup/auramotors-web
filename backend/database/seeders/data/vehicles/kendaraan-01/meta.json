@@ -1,0 +1,20 @@
+{
+  "brand": "Porsche",
+  "model": "911 GT3 RS",
+  "year": 2024,
+  "price": 11850000000,
+  "mileage": 128,
+  "location": "Jakarta",
+  "description": "Unit langka Porsche 911 GT3 RS 2024 dengan Weissach Package — konfigurasi paling ringan dan paling fokus-sirkuit yang pernah Porsche produksi untuk jalan raya. Eksterior GT Silver Metallic diaksentuasi livery Pyro Red pada wing dan diffuser belakang. Odometer hanya 128 km, berstatus unregistered dan tersimpan dalam kondisi sempurna seperti baru keluar dari pabrik Zuffenhausen.\n\nMesin 4.0L Boxer 6-silinder naturally aspirated menghasilkan 525 HP dengan rev limit 9.000 rpm, disalurkan melalui transmisi PDK 7-percepatan. Telah melewati sertifikasi 150-point heritage tanpa catatan, termasuk laporan forensik silinder, sistem PDK, dan sasis carbon monocoque — bebas dari riwayat banjir maupun benturan sirkuit.\n\nHarga sudah mencakup paket balik nama kilat Samsat Khusus (nomor polisi VIP pilihan), ceramic coating & full PPF Xpel self-healing, serta asuransi all-risk supercar 1 tahun dengan cakupan track-day.",
+  "specs": {
+    "transmisi": "PDK 7-percepatan",
+    "bahan_bakar": "Bensin",
+    "warna": "GT Silver Metallic / Pyro Red",
+    "mesin": "4.0L Boxer 6-silinder Naturally Aspirated",
+    "tenaga": "525 HP @ 9.000 rpm",
+    "akselerasi": "0–100 km/h dalam 3,2 detik",
+    "kapasitas_penumpang": 2,
+    "tipe": "Coupé",
+    "paket": "Weissach Package"
+  }
+}

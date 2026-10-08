@@ -1,0 +1,59 @@
+Proyek marketplace kendaraan itu beda kelasnya dari e-commerce biasa — karena barangnya bernilai tinggi (ratusan juta), butuh trust & verification yang jauh lebih ketat daripada jual baju/gadget. Berikut breakdown lengkapnya, saya susun sesuai 4 kebutuhan minimummu: admin, seller, buyer, payment.
+
+1. Domain modeling — 4 role minimum + yang sering kelupaan
+Admin: approve listing kendaraan (cegah listing curang/duplikat), verifikasi dokumen (STNK/BPKB), moderasi dispute, kelola komisi.
+Seller (dealer/perorangan): KYC wajib (KTP, kadang NPWP kalau dealer), upload listing + dokumen kendaraan, terima payout setelah transaksi clear.
+Buyer: browse/filter kendaraan, chat dengan seller, checkout, tracking status pembayaran & transfer kepemilikan.
+Payment/Escrow layer — ini yang paling krusial untuk kendaraan: uang buyer jangan langsung cair ke seller. Harus ditahan sampai ada konfirmasi serah-terima (mirip rekening bersama/escrow), karena nilai transaksinya besar dan risiko penipuan tinggi.
+2. Stack rekomendasi
+
+Mengacu ke layer framework yang biasa kamu pakai:
+
+Layer	Rekomendasi	Kenapa
+Frontend	Next.js 16 (App Router)	Listing kendaraan butuh SEO bagus (orang cari "jual mobil Avanza 2020 Tangerang" di Google) + perlu dashboard dinamis untuk 3 role berbeda. Next.js unggul untuk SaaS/app yang butuh auth dan data kompleks dengan ekosistem terbesar.
+Backend/API	Laravel 12 (kalau prioritas kecepatan bangun + tim solo) atau NestJS (kalau mau full TypeScript)	Untuk marketplace dengan logic bisnis kompleks (komisi, escrow, verifikasi dokumen, multi-role), arsitektur Laravel — service provider, policy, form request, observer, event system — kasih struktur yang bertahan seiring kompleksitas bertambah.
+Database	PostgreSQL	Transaksional (escrow, payout) butuh ACID yang kuat, plus dukungan JSONB kalau spesifikasi kendaraan variatif per kategori.
+Auth	Sanctum/JWT + verifikasi dokumen manual/semi-otomatis (OCR KTP opsional)	Buyer bisa auth ringan, tapi seller wajib KYC sebelum bisa listing.
+Storage	S3-compatible (buat foto kendaraan, dokumen)	Foto kendaraan biasanya banyak (10-20 per listing) + dokumen sensitif harus di storage terpisah dari public bucket.
+3. Payment — bagian paling penting
+
+Untuk marketplace multi-vendor, uang buyer harus terpisah otomatis antara komisi platform dan payout ke seller, bukan manual. Karena basis kamu Indonesia, opsi realistisnya:
+
+Xendit — direkomendasikan kalau kamu butuh kirim uang keluar (bayar seller di marketplace, refund massal): Xendit memperlakukan disbursement sebagai produk kelas satu dengan API yang bisa payout ke 450+ bank dan e-wallet, termasuk single dan batch payout — jadi satu provider untuk terima dan kirim uang bikin rekonsiliasi tetap rapi.
+Midtrans — lebih cepat diintegrasikan kalau kamu pakai Laravel dengan plugin siap pakai dan fokus cuma menerima pembayaran, tapi historisnya nggak punya fitur disbursement native (ada produk terpisah bernama Iris, tapi bukan fokus utama mereka).
+Pola escrow untuk kendaraan: uang buyer masuk ke akun platform dulu (holding), baru di-disburse ke seller setelah admin/buyer konfirmasi serah-terima kendaraan — bukan auto-split real-time seperti marketplace barang kecil, karena risiko sengketa lebih tinggi.
+
+Rekomendasi konkret: pakai Xendit dari awal kalau kamu tahu bakal butuh disbursement (hampir pasti untuk marketplace kendaraan), supaya nggak perlu migrasi provider di tengah jalan.
+
+4. Hal spesifik kendaraan yang beda dari e-commerce biasa
+Verifikasi dokumen (STNK, BPKB, nomor rangka/mesin) sebelum listing tayang — ini layer trust & safety yang nggak ada di e-commerce produk biasa.
+Status kepemilikan/transfer perlu di-track sebagai state machine terpisah (listing → deal → escrow hold → serah terima → payout release → selesai), bukan cuma status order biasa.
+Riwayat servis/inspeksi (opsional tapi jadi differentiator besar — ini yang bikin platform kayak Carsome dipercaya).
+Dispute resolution flow untuk admin, karena barang fisik besar rawan komplain kondisi tidak sesuai.
+5. Urutan build MVP (deployment-first, sesuai preferensimu)
+Auth + role (admin/seller/buyer) + listing CRUD dulu, tanpa payment.
+Integrasi Xendit sandbox untuk collection (buyer bayar) — test dulu tanpa disbursement.
+Tambah state machine transaksi (escrow hold) + admin dashboard approve.
+Baru integrasi disbursement ke seller setelah flow-nya jalan manual dulu (admin trigger payout manual sebelum di-otomatisasi).
+
+POINTS dalam pembuatan web :
+1. Cache API response
+2. Load Balancer
+3. Index the Database
+4. Compress Image
+5. Loading Skeletons
+6. Cache Expensive Queries
+7. N+1 database Queries
+8. Debounce Input Handlers
+9. Split Code into Chunk
+10. Add CDN
+11. Server-side Caching
+12. Paginate Large Lists
+13. Lighthouse Audit
+14. Compress API Payloads
+15. Unnecessary re-randers
+16. Minify JS and CSS
+17. Add Lazy Loading
+18. Defer non-Critical Scripts
+19. Unused Dependencies
+20. Database Connection Pooling

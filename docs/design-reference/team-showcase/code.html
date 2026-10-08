@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="id"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&amp;family=Geist:wght@100..900&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}@keyframes marquee{0%{transform:translateX(0%);}100%{transform:translateX(-50%);}}.animate-marquee{display:flex;width:200%;animation:marquee 32s linear infinite;}.animate-marquee:hover{animation-play-state:paused;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "outline": "#99907c", "inverse-surface": "#e3e2e5", "inverse-primary": "#735c00", "secondary": "#c7c6c4", "on-error-container": "#ffdad6", "tertiary": "#eec98f", "outline-variant": "#4d4635", "inverse-on-surface": "#303033", "on-tertiary-fixed-variant": "#5b4314", "surface": "#121315", "surface-container": "#1f2022", "secondary-fixed-dim": "#c7c6c4", "on-surface-variant": "#d0c5af", "on-primary": "#3c2f00", "primary-fixed": "#ffe088", "on-error": "#690005", "surface-container-lowest": "#0d0e10", "error-container": "#93000a", "on-surface": "#e3e2e5", "background": "#121315", "on-tertiary-fixed": "#271900", "secondary-fixed": "#e3e2e0", "on-tertiary-container": "#594113", "primary": "#f2ca50", "surface-tint": "#e9c349", "surface-bright": "#38393b", "on-primary-container": "#554300", "on-secondary-fixed-variant": "#464746", "error": "#ffb4ab", "on-background": "#e3e2e5", "on-secondary-fixed": "#1b1c1b", "surface-dim": "#121315", "on-tertiary": "#422c01", "on-secondary-container": "#b5b5b3", "tertiary-container": "#d0ae76", "surface-variant": "#343537", "primary-fixed-dim": "#e9c349", "tertiary-fixed": "#ffdeaa", "surface-container-high": "#292a2c", "on-primary-fixed": "#241a00", "primary-container": "#d4af37", "surface-container-low": "#1b1c1e", "surface-container-highest": "#343537", "on-secondary": "#303130", "secondary-container": "#464746", "on-primary-fixed-variant": "#574500", "tertiary-fixed-dim": "#e5c187" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-lg": "2rem", "margin-mobile": "1.25rem", "margin": "3rem", "space-sm": "0.75rem", "gutter-mobile": "0.75rem", "gutter": "1.5rem", "space-xs": "0.375rem", "space-xl": "3.5rem", "space-md": "1.25rem" }, "fontFamily": { "headline-lg-mobile": [ "Bodoni Moda" ], "display-lg": [ "Bodoni Moda" ], "display-lg-mobile": [ "Bodoni Moda" ], "headline-lg": [ "Bodoni Moda" ], "headline-sm": [ "Manrope" ], "body-lg": [ "Manrope" ], "label-sm": [ "Geist" ], "label-lg": [ "Geist" ], "body-md": [ "Manrope" ], "body-sm": [ "Manrope" ], "label-md": [ "Geist" ], "headline-md": [ "Bodoni Moda" ] }, "fontSize": { "headline-lg-mobile": [ "28px", { "lineHeight": "36px", "letterSpacing": "0em", "fontWeight": "500" } ], "display-lg": [ "56px", { "lineHeight": "64px", "letterSpacing": "-0.02em", "fontWeight": "400" } ], "display-lg-mobile": [ "36px", { "lineHeight": "44px", "letterSpacing": "-0.01em", "fontWeight": "400" } ], "headline-lg": [ "40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "500" } ], "headline-sm": [ "20px", { "lineHeight": "28px", "letterSpacing": "0.01em", "fontWeight": "600" } ], "body-lg": [ "18px", { "lineHeight": "28px", "letterSpacing": "0em", "fontWeight": "300" } ], "label-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.16em", "fontWeight": "600" } ], "label-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.06em", "fontWeight": "500" } ], "body-md": [ "15px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-sm": [ "13px", { "lineHeight": "20px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "label-md": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.12em", "fontWeight": "600" } ], "headline-md": [ "28px", { "lineHeight": "36px", "letterSpacing": "0em", "fontWeight": "400" } ] } } } };</script></head><body class="bg-surface font-body-md text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container"><header class="fixed top-0 left-0 right-0 z-50 bg-surface/90 backdrop-blur-2xl shadow-[0_10px_35px_rgba(0,0,0,0.45)]"><div class="w-full bg-surface-container-lowest overflow-hidden py-1.5 shadow-[inset_0_-1px_0_rgba(212,175,55,0.15)]"><div class="animate-marquee flex items-center whitespace-nowrap"><div class="flex items-center gap-space-lg shrink-0 px-space-md"><div class="flex items-center gap-space-xs"><span class="bg-primary text-on-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Eksklusif</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Lelang Privat: Ferrari Daytona SP3 Chassis #012 // Penawaran Dibuka 20:00 WIB</span></div><span class="text-outline text-label-sm">•</span><div class="flex items-center gap-space-xs"><span class="bg-tertiary-container text-on-tertiary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Concierge</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Seasonal Privilege: Diskon Komisi 50% Untuk Koleksi Hypercar Terpilih</span></div><span class="text-outline text-label-sm">•</span><div class="flex items-center gap-space-xs"><span class="bg-primary-container text-on-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Live Pulse</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Bugatti Chiron Profilée Telah Dialokasikan ke Jakarta Sanctuary</span></div><span class="text-outline text-label-sm">•</span><div class="flex items-center gap-space-xs"><span class="bg-surface-variant text-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Verified</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Inspeksi 150-Titik Provenance Terakreditasi FIA Heritage</span></div><span class="text-outline text-label-sm">•</span></div><div class="flex items-center gap-space-lg shrink-0 px-space-md"><div class="flex items-center gap-space-xs"><span class="bg-primary text-on-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Eksklusif</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Lelang Privat: Ferrari Daytona SP3 Chassis #012 // Penawaran Dibuka 20:00 WIB</span></div><span class="text-outline text-label-sm">•</span><div class="flex items-center gap-space-xs"><span class="bg-tertiary-container text-on-tertiary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Concierge</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Seasonal Privilege: Diskon Komisi 50% Untuk Koleksi Hypercar Terpilih</span></div><span class="text-outline text-label-sm">•</span><div class="flex items-center gap-space-xs"><span class="bg-primary-container text-on-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Live Pulse</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Bugatti Chiron Profilée Telah Dialokasikan ke Jakarta Sanctuary</span></div><span class="text-outline text-label-sm">•</span><div class="flex items-center gap-space-xs"><span class="bg-surface-variant text-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase tracking-widest font-bold">Verified</span><span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest">Inspeksi 150-Titik Provenance Terakreditasi FIA Heritage</span></div><span class="text-outline text-label-sm">•</span></div></div></div><div class="h-20 max-w-[1440px] mx-auto px-margin flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-lg shrink-0"><a class="flex items-center gap-space-sm group" data-path="koleksi-mewah" href="#"><img alt="AuraMotors Crest Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXw6ZZLUxgiC0iaUi-aCCXmZk80Z3zVlC8kvnemdRF9a_nUryrVu4ifhMQGNlBch5S0dUknYlroeTTGgokVZmNiUpV5CSAsy8P0392TcTgs1sIqRCvCX7TuMxYhHMsPX3JrvVQSAp1ExCCUvzFmWmf_Bth1pTewIGTkhyltc3mcvsIsLcSUmc9xLucuMONnez5r4wQzlWmGVXvIjdL0WgYggkUDn2xLCSwQy5y-OIWURvk03-ua471"/><div class="flex flex-col"><span class="font-headline-sm text-headline-sm uppercase tracking-widest text-primary">AuraMotors</span><span class="font-label-sm text-label-sm tracking-widest text-on-surface-variant uppercase">Sanctuary Privé</span></div></a><nav class="hidden xl:flex items-center gap-space-md" data-active-classes="text-primary font-semibold"><a aria-current="page" class="tracking-wider transition-colors py-2 text-primary font-semibold" data-path="koleksi-mewah" href="#">Koleksi Mewah</a><a class="font-label-lg text-label-lg tracking-wider text-on-surface-variant hover:text-on-surface transition-colors py-2" data-path="lelang-privat" href="#">Lelang Privat</a><a class="font-label-lg text-label-lg tracking-wider text-on-surface-variant hover:text-on-surface transition-colors py-2" data-path="layanan-konsinyasi" href="#">Layanan Konsinyasi</a><a class="font-label-lg text-label-lg tracking-wider text-on-surface-variant hover:text-on-surface transition-colors py-2" data-path="tentang-kami" href="#">Tentang Kami</a><a class="font-label-lg text-label-lg tracking-wider text-on-surface-variant hover:text-on-surface transition-colors py-2" data-path="tim-pengembang" href="#">Tim Pengembang</a></nav></div><div class="flex items-center gap-space-sm"><div class="relative hidden lg:block w-56"><span class="absolute left-space-sm top-1/2 -translate-y-1/2 material-symbols-outlined text-outline text-[18px]">search</span><input class="w-full bg-surface-container-lowest/80 text-on-surface font-body-sm text-body-sm pl-9 pr-space-sm py-1.5 rounded-full placeholder:text-outline focus:outline-none focus:bg-surface-container-low transition-colors" placeholder="Cari kurasi hypercar..." type="text"/></div><div class="hidden sm:flex items-center gap-1.5 px-space-xs py-1 rounded-full bg-surface-container-lowest shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"><span class="font-label-sm text-label-sm text-tertiary px-1.5 font-bold uppercase tracking-wider">IDR / VIP-X</span><span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span></div><div class="flex items-center gap-space-xs"><button class="font-label-md text-label-md tracking-wider uppercase px-space-sm py-2 text-on-surface-variant hover:text-on-surface transition-colors rounded" type="button">Masuk</button><button class="bg-primary-container text-on-primary font-label-md text-label-md tracking-widest uppercase font-bold px-space-md py-2 rounded shadow-[0_0_20px_rgba(212,175,55,0.25)] hover:bg-primary transition-all" type="button">Daftar</button></div><div class="pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl13Is9GSmdfh85Th_kUzySGt7yBOyL65GXDib9KmWOqtDomHMaA5I_B1rLFcqHRh3eCS_4Mh7IOB0WcZzVd8yLsc9bCt1kRwNu0bLXJD1TuBJJ6ec8sDqIXXKqNk2xtce9ZQskv4TXeF0WWEVELDjRscwDKxnJa9AJ4vfqWzrFnPYuIG0qfsXV0Ak-XwEEBF1lARvRduhSEx7i2ZJGkbBOWnVi6kw1R7u6bwpUMBk_swdmKIh3CAd"/></div></div></div></header><main class="w-full pt-28 bg-surface"><div class="flex flex-col w-full">
+<!-- Sub-Header Running Ticker (Event Eksklusif) -->
+<section class="w-full bg-surface-container-lowest/90 overflow-hidden py-2.5 shadow-md">
+<div class="animate-marquee flex items-center whitespace-nowrap">
+<div class="flex items-center gap-space-lg shrink-0 px-space-md">
+<span class="text-primary font-label-md text-label-md uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+          EVENT EKSKLUSIF: Jakarta Private Supercar Gala 2025
+        </span>
+<span class="text-outline text-label-sm">•</span>
+<span class="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+          Diskon Bea Balik Nama &amp; Free 3-Year Concierge Service untuk Rolls-Royce &amp; Porsche pilihan
+        </span>
+<span class="text-outline text-label-sm">•</span>
+<span class="text-tertiary font-label-md text-label-md uppercase tracking-wider font-semibold">
+          Promo Bunga 0% Pembiayaan Khusus Member VIP AuraPrivilege hingga akhir bulan ini!
+        </span>
+<span class="text-outline text-label-sm">•</span>
+</div>
+<div class="flex items-center gap-space-lg shrink-0 px-space-md">
+<span class="text-primary font-label-md text-label-md uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">bolt</span>
+          EVENT EKSKLUSIF: Jakarta Private Supercar Gala 2025
+        </span>
+<span class="text-outline text-label-sm">•</span>
+<span class="text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+          Diskon Bea Balik Nama &amp; Free 3-Year Concierge Service untuk Rolls-Royce &amp; Porsche pilihan
+        </span>
+<span class="text-outline text-label-sm">•</span>
+<span class="text-tertiary font-label-md text-label-md uppercase tracking-wider font-semibold">
+          Promo Bunga 0% Pembiayaan Khusus Member VIP AuraPrivilege hingga akhir bulan ini!
+        </span>
+<span class="text-outline text-label-sm">•</span>
+</div>
+</div>
+</section>
+<!-- 1. TEAM HEADER SHOWCASE (3 Anggota dengan Kode Unik, Badge & Foto) -->
+<section class="max-w-[1440px] w-full mx-auto px-margin-mobile md:px-margin pt-space-md pb-space-lg">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-sm mb-space-md">
+<div>
+<div class="flex items-center gap-2 text-primary font-label-sm text-label-sm uppercase tracking-widest mb-1">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
+<span>AuraMotors Verified Brokerage Guild</span>
+</div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Dewan Kurator &amp; Spesialis Pengadaan</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-md">
+        Setiap unit kendaraan mewah didampingi langsung oleh pialang berlisensi dengan audit legalitas dan garansi escrow independen.
+      </p>
+</div>
+<!-- 3 Member Luxury Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<!-- Member 1: Farhan Al-Habsyi -->
+<div class="bg-surface-container/70 backdrop-blur-xl p-space-md rounded-xl flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all group">
+<div>
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Online Broker
+            </span>
+<span class="font-label-sm text-label-sm text-outline tracking-widest font-mono">CODE: DEV-001</span>
+</div>
+<div class="flex items-center gap-space-sm mb-space-sm">
+<div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-md">
+<img alt="Farhan Al-Habsyi - Chief Architect &amp; Fleet Curator" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKl3Clz15FnrIPBKRWN8p1arJbvCFDW3GmDlTZkhVcWygRzPmz3v2F5VsDpduYuuDSfshGqTXuGnMH3KtdgvdGmo9OTj95g4IQQt3odOZsyOkBm3q5zgAS0x7FNgBxccfXzgZF_NR3rJIYwMNL2r-Oe_nj6hAtfDCt39bXRxvy5_CPjO62_NjcT99oItoN7zZv9WksESpD84MKG281FZpIKoigGBUk6xiNMsA_SmkG6elQBN1hpHJ7"/>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Farhan Al-Habsyi</h3>
+<span class="font-label-md text-label-md text-tertiary truncate">Chief Architect &amp; Fleet Curator</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Spesialisasi: Hypercar Alokasi Eropa</span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between gap-2">
+<div class="text-outline font-label-sm text-label-sm uppercase">14 Tahun Pengalaman • 89 Unit Terkurasi</div>
+<button class="bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-label-md text-label-md px-space-sm py-1.5 rounded uppercase tracking-wider transition-all shrink-0 flex items-center gap-1" onclick="openAdvisorModal('Farhan Al-Habsyi', 'DEV-001')" type="button">
+<span class="material-symbols-outlined text-[16px]">chat</span>
+<span>Hubungi</span>
+</button>
+</div>
+</div>
+<!-- Member 2: Dian Paramitha, S.T. -->
+<div class="bg-surface-container/70 backdrop-blur-xl p-space-md rounded-xl flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all group">
+<div>
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span> VIP Concierge Active
+            </span>
+<span class="font-label-sm text-label-sm text-outline tracking-widest font-mono">CODE: UXD-002</span>
+</div>
+<div class="flex items-center gap-space-sm mb-space-sm">
+<div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-md">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Portrait of Dian Paramitha, executive Indonesian woman in tailored black blazer with subtle gold lapel brooch, elegant soft warm studio lighting, professional corporate luxury aura, high resolution photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPctoDqW1URaVrLP0gVF6wkeN5GjFM7DBvQtgJzMLkYZBve1jQ3jTA8w2pLgIsUjsFmp__7kLl9pFZ6AGRZ5zO9TAVCy130VYD1l9qxHSpTkbXBpoQygqJyCAMcwBK7j67cdNti3Jz7Cy_TCjs_ivdck_FFl0-u4wx-5jKC6gt7KA3A0DKpPeYKJv-ba67kUKPyL5Qn9LJ-Jp2lsx895G6l51swC58c0OMT1255uytroRGIv2ZQ5Xm"/>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Dian Paramitha, S.T.</h3>
+<span class="font-label-md text-label-md text-tertiary truncate">Lead Luxury Experience &amp; Client Relations</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Spesialisasi: Rolls-Royce &amp; Bespoke Saloon</span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between gap-2">
+<div class="text-outline font-label-sm text-label-sm uppercase">11 Tahun Pengalaman • Concierge HNW</div>
+<button class="bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-label-md text-label-md px-space-sm py-1.5 rounded uppercase tracking-wider transition-all shrink-0 flex items-center gap-1" onclick="openAdvisorModal('Dian Paramitha, S.T.', 'UXD-002')" type="button">
+<span class="material-symbols-outlined text-[16px]">chat</span>
+<span>Hubungi</span>
+</button>
+</div>
+</div>
+<!-- Member 3: Reza Mahardika -->
+<div class="bg-surface-container/70 backdrop-blur-xl p-space-md rounded-xl flex flex-col justify-between shadow-xl hover:shadow-2xl transition-all group">
+<div>
+<div class="flex items-center justify-between gap-2 mb-space-sm">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm uppercase tracking-wider flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span> Legal Counsel Ready
+            </span>
+<span class="font-label-sm text-label-sm text-outline tracking-widest font-mono">CODE: SEC-003</span>
+</div>
+<div class="flex items-center gap-space-sm mb-space-sm">
+<div class="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 shadow-md">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Portrait of Reza Mahardika, young charismatic Indonesian male executive with crisp dark luxury suit, gold watch accent, sophisticated dark slate background, high end corporate studio photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1djzMDyqEbCMh4iXSAP-3uUkj500WUbl4SGx2sRDfopD9mcpiHBEKQNu54kDqD3Uj8T4-5Y54nSVxh1i6iucxD-0H4ZOdaHDkkDc4QHc6HPZRzq1EEMxsdUgW8fo6Unz9W0zCYe8asaKC48c9fesX6LTaw-unVOj6qxamIk6_sRfJmk9mFeL6qm-O_50C1CJU9u_KPMs3qNyXGJycKyeRq9di6VSMWfAkoUG2PGrJ9PbrE1T-DUyq"/>
+</div>
+<div class="flex flex-col min-w-0">
+<h3 class="font-headline-sm text-headline-sm text-on-surface truncate">Reza Mahardika</h3>
+<span class="font-label-md text-label-md text-tertiary truncate">Head of Escrow &amp; Vehicle Provenance</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Spesialisasi: Audit BPKB, Form A &amp; FIA Heritage</span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between gap-2">
+<div class="text-outline font-label-sm text-label-sm uppercase">Audit 150+ Titik • Escrow Terproteksi</div>
+<button class="bg-primary/10 hover:bg-primary text-primary hover:text-on-primary font-label-md text-label-md px-space-sm py-1.5 rounded uppercase tracking-wider transition-all shrink-0 flex items-center gap-1" onclick="openAdvisorModal('Reza Mahardika', 'SEC-003')" type="button">
+<span class="material-symbols-outlined text-[16px]">chat</span>
+<span>Hubungi</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. PENJELASAN PLATFORM WEB JUAL BELI KENDARAAN MEWAH (AuraMotors Sanctuary) -->
+<section class="w-full bg-surface-container-low py-space-xl my-space-md">
+<div class="max-w-[1440px] mx-auto px-margin-mobile md:px-margin">
+<!-- Section Header -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-center">
+<div class="lg:col-span-6 flex flex-col gap-space-sm">
+<span class="font-label-md text-label-md uppercase tracking-widest text-primary">Ekosistem Marketplace Kolektor Terintegrasi</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface leading-tight">
+            Transparansi Absolut, Kerahasiaan Sempurna, dan Alokasi Unit Tanpa Tanding.
+          </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant font-light leading-relaxed">
+            AuraMotors meredefinisi standar jual beli mobil eksotis di Nusantara. Menggabungkan kurasi ketat setara galeri seni rupa dengan infrastruktur hukum dan perbankan digital, kami memfasilitasi transaksi bernilai tinggi dengan jaminan tanpa celah.
+          </p>
+<div class="flex flex-wrap gap-space-sm pt-2">
+<div class="flex items-center gap-2 text-on-surface font-label-md text-label-md">
+<span class="material-symbols-outlined text-primary text-[18px]">verified</span>
+              100% Cek Dokumen BPKB &amp; Form A
+            </div>
+<div class="flex items-center gap-2 text-on-surface font-label-md text-label-md">
+<span class="material-symbols-outlined text-primary text-[18px]">lock</span>
+              Rekening Bersama Lembaga Finansial
+            </div>
+<div class="flex items-center gap-2 text-on-surface font-label-md text-label-md">
+<span class="material-symbols-outlined text-primary text-[18px]">local_shipping</span>
+              Towing Hidrolik Tertutup Nasional
+            </div>
+</div>
+</div>
+<!-- 3 Pillars Feature Bento Cards -->
+<div class="lg:col-span-6 grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<div class="bg-surface-container p-space-md rounded-xl shadow-lg flex flex-col justify-between">
+<div class="w-10 h-10 rounded bg-primary/10 flex items-center justify-center text-primary mb-space-sm">
+<span class="material-symbols-outlined text-[24px]">gavel</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Biro Jasa &amp; Legalitas</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Mutasi kendaraan, balik nama instan, faktur pajak resmi, dan verifikasi nomor rangka terkoordinasi resmi.
+              </p>
+</div>
+<div class="mt- space-xs font-label-sm text-label-sm text-primary uppercase tracking-wider">Garansi Keabsahan 100%</div>
+</div>
+<div class="bg-surface-container p-space-md rounded-xl shadow-lg flex flex-col justify-between">
+<div class="w-10 h-10 rounded bg-tertiary/10 flex items-center justify-center text-tertiary mb-space-sm">
+<span class="material-symbols-outlined text-[24px]">shield</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Escrow Terproteksi</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Dana pembeli diamankan di custodial escrow account hingga seluruh berkas dan fisik kendaraan diverifikasi tuntas.
+              </p>
+</div>
+<div class="mt-space-xs font-label-sm text-label-sm text-tertiary uppercase tracking-wider">Tanpa Risiko Finansial</div>
+</div>
+<div class="bg-surface-container p-space-md rounded-xl shadow-lg flex flex-col justify-between">
+<div class="w-10 h-10 rounded bg-primary-container/20 flex items-center justify-center text-primary mb-space-sm">
+<span class="material-symbols-outlined text-[24px]">biotech</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mb-1">Inspeksi Forensik</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Audit ketebalan cat laser, diagnostik ECU komputer, rekam jejak tabrakan dan banjir oleh mekanik bersertifikat.
+              </p>
+</div>
+<div class="mt-space-xs font-label-sm text-label-sm text-primary uppercase tracking-wider">150+ Titik Pengecekan</div>
+</div>
+</div>
+</div>
+<!-- Live Statistics Infographic Bar -->
+<div class="mt-space-lg pt-space-lg bg-surface-container/60 p-space-lg rounded-xl grid grid-cols-2 md:grid-cols-4 gap-space-md">
+<div class="flex flex-col">
+<span class="font-display-lg text-display-lg text-primary font-serif">Rp 480M+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-1">Total Volume Transaksi</span>
+<span class="font-body-sm text-body-sm text-outline">Terhitung Q1 2024 - Q1 2025</span>
+</div>
+<div class="flex flex-col">
+<span class="font-display-lg text-display-lg text-secondary font-serif">100%</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-1">Jaminan Dokumen Asli</span>
+<span class="font-body-sm text-body-sm text-outline">Bebas sengketa hukum</span>
+</div>
+<div class="flex flex-col">
+<span class="font-display-lg text-display-lg text-tertiary font-serif">48 Jam</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-1">Pengantaran Jabodetabek</span>
+<span class="font-body-sm text-body-sm text-outline">Towing kontainer privat</span>
+</div>
+<div class="flex flex-col">
+<span class="font-display-lg text-display-lg text-on-surface font-serif">180+</span>
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-widest mt-1">Kolektor Anggota Terdaftar</span>
+<span class="font-body-sm text-body-sm text-outline">Akses eksklusif off-market</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. FILTER & SEARCH ADVANCED MEWAH -->
+<section class="max-w-[1440px] w-full mx-auto px-margin-mobile md:px-margin my-space-md">
+<div class="bg-surface-container p-space-md rounded-xl shadow-xl flex flex-col gap-space-md">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">tune</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Filter Kurasi Showroom Otomotif</h3>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider py-1 px-2 transition-colors" onclick="resetFilters()">
+            Reset Filter
+          </button>
+<span class="px-2.5 py-1 bg-surface-container-highest text-primary font-label-sm text-label-sm rounded uppercase font-bold">
+            18 Unit Siap Inspeksi
+          </span>
+</div>
+</div>
+<!-- Filter Controls Grid -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-space-sm">
+<!-- Brand Select -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Merek Prestisius</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none cursor-pointer" id="filterBrand" onchange="applyVehicleFilter()">
+<option value="all">Semua Merek</option>
+<option value="Porsche">Porsche (5 Unit)</option>
+<option value="Rolls-Royce">Rolls-Royce (3 Unit)</option>
+<option value="Ferrari">Ferrari (4 Unit)</option>
+<option value="Mercedes-Maybach">Mercedes-Maybach (2 Unit)</option>
+<option value="Bentley">Bentley (2 Unit)</option>
+<option value="Lamborghini">Lamborghini (2 Unit)</option>
+</select>
+</div>
+<!-- Body Type -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Tipe Bodi</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none cursor-pointer" id="filterType" onchange="applyVehicleFilter()">
+<option value="all">Semua Siluet</option>
+<option value="Coupe">Track Coupe / Supercar</option>
+<option value="Saloon">Ultra-Luxury Saloon</option>
+<option value="SUV">First-Class Luxury SUV</option>
+<option value="Cabriolet">Grand Tourer Spyder</option>
+</select>
+</div>
+<!-- Tahun Produksi -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Tahun Registrasi</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none cursor-pointer">
+<option>Semua Tahun (2022 - 2025)</option>
+<option>2024 - 2025 (Brand New / Delivery Mile)</option>
+<option>2022 - 2023 (Certified Pre-Owned)</option>
+</select>
+</div>
+<!-- Rentang Harga -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Rentang Nilai (IDR)</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none cursor-pointer" id="filterPrice" onchange="applyVehicleFilter()">
+<option value="all">Semua Nilai</option>
+<option value="under10">&lt; Rp 10 Miliar</option>
+<option value="10to15">Rp 10 - 15 Miliar</option>
+<option value="above15">&gt; Rp 15 Miliar</option>
+</select>
+</div>
+<!-- Status Ketersediaan -->
+<div class="flex flex-col gap-1">
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Status Unit</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none cursor-pointer">
+<option>Ready di SCBD Flagship</option>
+<option>Private Consignment (Off-Site)</option>
+<option>Incoming Import Slot</option>
+</select>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. KOLEKSI GALLERY PREVIEW & FITUR OLSHOP MEWAH -->
+<section class="max-w-[1440px] w-full mx-auto px-margin-mobile md:px-margin my-space-md">
+<div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-space-md">
+<div>
+<span class="font-label-md text-label-md uppercase tracking-widest text-primary">Katalog Premier AuraMotors</span>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Armada Mahakarya Tersedia</h2>
+</div>
+<div class="flex items-center gap-2 mt-2 sm:mt-0 font-label-md text-label-md text-on-surface-variant">
+<span>Urutkan:</span>
+<span class="text-primary font-bold uppercase cursor-pointer hover:underline">Rekomendasi Utama ▼</span>
+</div>
+</div>
+<!-- Vehicles Showcase Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg" id="vehicleGrid">
+<!-- CARD 1: Porsche 911 GT3 RS -->
+<article class="vehicle-card bg-surface-container/80 rounded-xl overflow-hidden shadow-2xl flex flex-col group transition-all duration-300" data-brand="Porsche" data-price="11.85" data-type="Coupe">
+<div class="relative w-full h-72 md:h-80 overflow-hidden bg-surface-container-lowest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="2024 Porsche 911 GT3 RS Weissach Package in Arctic Grey with Pyro Red forged magnesium wheels and large carbon fiber swan-neck rear wing in high-end minimalist automotive studio lighting, dark luxury aesthetic, sharp ultra HD photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgpFIYgxbGzXY8RgQHbbMXC-9U3AZOP_hayF6sUrDqSmJXKoQmnWg5MMea88EkxMoxvaEanBQjv04Sh0B7-teMIGXqkRTK2ejo0VsrI0FsS8uPRKR2-EXdvJ_lONtKrimZW6J8RKDVZ2l3TbBhO4bnQZvLL4uAFgWS-Az188Nak639ttbFHRcpIeHeBS2mLjp0r_2DFnuV0ZrDHBJ0a9tczAd1k_vjJZyV1nQu4njrS6wQD8esSti-"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-black/40"></div>
+<!-- Badges -->
+<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded-full bg-primary text-on-primary font-label-sm text-label-sm font-bold uppercase tracking-widest shadow-md">
+              Hot Listing • Promo Disc Rp 250Jt
+            </span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md">
+              Weissach Package
+            </span>
+</div>
+<div class="absolute top-4 right-4">
+<button class="w-9 h-9 rounded-full bg-surface-container-lowest/80 text-on-surface hover:text-primary backdrop-blur-md flex items-center justify-center transition-colors" onclick="toggleBookmark(this)" type="button">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<!-- Bottom Floating Spec Highlights -->
+<div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+<span class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-widest">JAKARTA PUSAT • PLAT B GANJIL</span>
+<span class="bg-surface-container-lowest/90 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded font-mono">ODOMETER: 850 KM</span>
+</div>
+</div>
+<!-- Card Content Body -->
+<div class="p-space-md flex flex-col flex-grow justify-between gap-space-md">
+<div>
+<div class="flex flex-col md:flex-row md:items-baseline justify-between gap-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">2024 Porsche 911 GT3 RS</h3>
+<div class="text-left md:text-right">
+<span class="font-label-sm text-label-sm text-outline uppercase line-through block">Rp 12.100.000.000</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Rp 11.850.000.000</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Konfigurasi sirkuit legal jalan raya terlengkap. Atap carbon weave, roll cage titanium, rem Ceramic Composite (PCCB), dan audio Bose Surround.
+            </p>
+<!-- 4 Micro Tech Specs Grid -->
+<div class="grid grid-cols-4 gap-2 mt-space-sm bg-surface-container-low p-space-sm rounded">
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Tenaga</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">525 HP</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">0-100 KM/H</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">3.2 Detik</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Transmisi</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">7-Speed PDK</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Mesin</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">4.0L Boxer NA</span>
+</div>
+</div>
+</div>
+<!-- Olshop Luxury Actions -->
+<div class="flex flex-col sm:flex-row items-center gap-space-xs pt-space-xs">
+<button class="w-full sm:w-auto flex-1 bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md uppercase tracking-wider py-2.5 rounded font-bold transition-all shadow-md flex items-center justify-center gap-1.5" onclick="openBookingModal('2024 Porsche 911 GT3 RS', 'Rp 11.850.000.000')" type="button">
+<span class="material-symbols-outlined text-[18px]">key</span>
+<span>Ajukan Booking / Test Drive</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all flex items-center justify-center gap-1" onclick="openCreditSim('2024 Porsche 911 GT3 RS', 11850000000)" type="button">
+<span class="material-symbols-outlined text-[18px]">calculate</span>
+<span>Simulasi Kredit</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all" onclick="openSpecDrawer('porsche-gt3rs')" type="button">
+              Detail Spek
+            </button>
+</div>
+</div>
+</article>
+<!-- CARD 2: Rolls-Royce Ghost Extended -->
+<article class="vehicle-card bg-surface-container/80 rounded-xl overflow-hidden shadow-2xl flex flex-col group transition-all duration-300" data-brand="Rolls-Royce" data-price="22.5" data-type="Saloon">
+<div class="relative w-full h-72 md:h-80 overflow-hidden bg-surface-container-lowest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="2023 Rolls-Royce Ghost Extended Series II in Diamond Black with Mandarin Orange coachline, polished Pantheon grille with subtle illuminated glow, shot inside luxury private aircraft hangar, hyper-detailed commercial photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0BArvyDdc1CW4KTJ9nutioANMHiJQcP3PtIGD0QGiH3nlsuq4ocsY7vSNDyxwh0Ev6K5QVg4so6q04_GQtzFTJ4Wx38ZTP9AQfmiGeOnAaWO7Nz70XewckHn4CFWj25sUi93Iy4G1nHUIS3QvCWZA4724yZROE3O7BqqEL2jYEbOLV4Gpzc6Z0UcvRRFAnQ7KQkUt3nyyJ3Jhzq_KNQlf1ReyGxqU2ewZGH_a7DZclw8ZeHBGUCpQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-black/40"></div>
+<!-- Badges -->
+<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded-full bg-tertiary-container text-on-tertiary font-label-sm text-label-sm font-bold uppercase tracking-widest shadow-md">
+              VIP Exclusive • Verifikasi Lolos
+            </span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md">
+              Extended Wheelbase (+170mm)
+            </span>
+</div>
+<div class="absolute top-4 right-4">
+<button class="w-9 h-9 rounded-full bg-surface-container-lowest/80 text-on-surface hover:text-primary backdrop-blur-md flex items-center justify-center transition-colors" onclick="toggleBookmark(this)" type="button">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<!-- Bottom Floating Spec Highlights -->
+<div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+<span class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-widest">SCBD SANCTUARY • FORM A RESMI APM</span>
+<span class="bg-surface-container-lowest/90 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded font-mono">ODOMETER: 2.100 KM</span>
+</div>
+</div>
+<!-- Card Content Body -->
+<div class="p-space-md flex flex-col flex-grow justify-between gap-space-md">
+<div>
+<div class="flex flex-col md:flex-row md:items-baseline justify-between gap-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">2023 Rolls-Royce Ghost Extended</h3>
+<div class="text-left md:text-right">
+<span class="font-label-sm text-label-sm text-outline uppercase block">Harga Penawaran Eksklusif</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Rp 22.500.000.000</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Kemewahan paripurna dengan Shooting Star Headliner, Serenity Seat recline dengan pijat panas-dingin, champagne cooler, dan pintu power assist otomatis.
+            </p>
+<!-- 4 Micro Tech Specs Grid -->
+<div class="grid grid-cols-4 gap-2 mt-space-sm bg-surface-container-low p-space-sm rounded">
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Tenaga</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">563 HP</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Torsi</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">850 Nm</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Suspensi</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">Planar Air</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Silinder</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">6.75L V12 Twin-Turbo</span>
+</div>
+</div>
+</div>
+<!-- Olshop Luxury Actions -->
+<div class="flex flex-col sm:flex-row items-center gap-space-xs pt-space-xs">
+<button class="w-full sm:w-auto flex-1 bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md uppercase tracking-wider py-2.5 rounded font-bold transition-all shadow-md flex items-center justify-center gap-1.5" onclick="openBookingModal('2023 Rolls-Royce Ghost Extended', 'Rp 22.500.000.000')" type="button">
+<span class="material-symbols-outlined text-[18px]">key</span>
+<span>Ajukan Booking / Test Drive</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all flex items-center justify-center gap-1" onclick="openCreditSim('2023 Rolls-Royce Ghost Extended', 22500000000)" type="button">
+<span class="material-symbols-outlined text-[18px]">calculate</span>
+<span>Simulasi Kredit</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all" onclick="openSpecDrawer('rolls-ghost')" type="button">
+              Detail Spek
+            </button>
+</div>
+</div>
+</article>
+<!-- CARD 3: Ferrari 296 GTB Assetto Fiorano -->
+<article class="vehicle-card bg-surface-container/80 rounded-xl overflow-hidden shadow-2xl flex flex-col group transition-all duration-300" data-brand="Ferrari" data-price="14.2" data-type="Coupe">
+<div class="relative w-full h-72 md:h-80 overflow-hidden bg-surface-container-lowest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="2024 Ferrari 296 GTB Assetto Fiorano in Rosso Imola with historic French racing livery stripes, carbon fiber aerodynamics package, titanium exhaust pipes, dramatically lit in dark studio with reflective dark polished floor, master luxury automotive shot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBzjYok3e8WfLPLNwaSpZxu0rDmGKTDCctYUw1P1B1c8lTJqWxcWSFVxTHzKXFf0akscXNB1BexaDJPEtNGDil4HUOA-7PLOWjRHr4I4lm7LljjnTQ497N-LsrBrJy8x8WGGLkPePD_MtWpSH3Bm6LZ7ZMn9gV0WHqhGGf9kn83VVme7J58exP_Ksrd8_c5ft6IcDTtAnWWNGbAkgc8qI-aitVtOqGm0ik5QZWfDDJnktREywJ7lmW9"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-black/40"></div>
+<!-- Badges -->
+<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-bold uppercase tracking-widest shadow-md">
+              Private Sale • KM Rendah
+            </span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md">
+              Assetto Fiorano Pack
+            </span>
+</div>
+<div class="absolute top-4 right-4">
+<button class="w-9 h-9 rounded-full bg-surface-container-lowest/80 text-on-surface hover:text-primary backdrop-blur-md flex items-center justify-center transition-colors" onclick="toggleBookmark(this)" type="button">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<!-- Bottom Floating Spec Highlights -->
+<div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+<span class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-widest">SURABAYA LOUNGE • TANGAN PERTAMA</span>
+<span class="bg-surface-container-lowest/90 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded font-mono">ODOMETER: 1.250 KM</span>
+</div>
+</div>
+<!-- Card Content Body -->
+<div class="p-space-md flex flex-col flex-grow justify-between gap-space-md">
+<div>
+<div class="flex flex-col md:flex-row md:items-baseline justify-between gap-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">2024 Ferrari 296 GTB</h3>
+<div class="text-left md:text-right">
+<span class="font-label-sm text-label-sm text-outline uppercase block">Harga Negosiasi Kolektor</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Rp 14.200.000.000</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              PHEV Berlinetta bertenaga dahsyat dengan shockbreaker balap Multimatic, velg carbon ultralight, jendela Lexan belakang, serta garansi Maranello Power hingga 2031.
+            </p>
+<!-- 4 Micro Tech Specs Grid -->
+<div class="grid grid-cols-4 gap-2 mt-space-sm bg-surface-container-low p-space-sm rounded">
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Total Output</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">830 CV</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">0-100 KM/H</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">2.9 Detik</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Top Speed</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">&gt; 330 KM/H</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Mesin</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">3.0L V6 Twin Turbo Hybrid</span>
+</div>
+</div>
+</div>
+<!-- Olshop Luxury Actions -->
+<div class="flex flex-col sm:flex-row items-center gap-space-xs pt-space-xs">
+<button class="w-full sm:w-auto flex-1 bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md uppercase tracking-wider py-2.5 rounded font-bold transition-all shadow-md flex items-center justify-center gap-1.5" onclick="openBookingModal('2024 Ferrari 296 GTB', 'Rp 14.200.000.000')" type="button">
+<span class="material-symbols-outlined text-[18px]">key</span>
+<span>Ajukan Booking / Test Drive</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all flex items-center justify-center gap-1" onclick="openCreditSim('2024 Ferrari 296 GTB', 14200000000)" type="button">
+<span class="material-symbols-outlined text-[18px]">calculate</span>
+<span>Simulasi Kredit</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all" onclick="openSpecDrawer('ferrari-296')" type="button">
+              Detail Spek
+            </button>
+</div>
+</div>
+</article>
+<!-- CARD 4: Mercedes-Maybach GLS 600 Night Series -->
+<article class="vehicle-card bg-surface-container/80 rounded-xl overflow-hidden shadow-2xl flex flex-col group transition-all duration-300" data-brand="Mercedes-Maybach" data-price="8.95" data-type="SUV">
+<div class="relative w-full h-72 md:h-80 overflow-hidden bg-surface-container-lowest">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="2023 Mercedes-Maybach GLS 600 Night Series in Obsidian Black and Kalahari Gold two-tone exterior, dark chrome Maybach emblems, 23-inch bespoke multi-spoke wheels, dark luxurious garage pavilion atmosphere, premium photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhfsP6qzhokVx6qdB9UFsrVC0_DNAhTStggVqBtkGHQN0m4gXT0wi2O_6155gP-mqQLaZYtBByYBzU5ui4vTc1l2sCkf4YdAHuq7n1uGIYni_DaxA_dAm4vzUMk3UG-yNkomxAJ4Umvqo3GTGXPN7nOfpDLq4L3f9BXm40VzO4RtaGq52dJwO4onLPqyVU-7YHHYBItExaGPT7DRSUx7m8lGcCqbGsYW4q-ANwfZPSHzgZEh8hijxU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-black/40"></div>
+<!-- Badges -->
+<div class="absolute top-4 left-4 flex flex-wrap gap-2">
+<span class="px-2.5 py-1 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-bold uppercase tracking-widest shadow-md">
+              Siap Kirim • Ready Stock
+            </span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-highest/90 text-on-surface font-label-sm text-label-sm uppercase tracking-wider backdrop-blur-md">
+              Night Series Edition
+            </span>
+</div>
+<div class="absolute top-4 right-4">
+<button class="w-9 h-9 rounded-full bg-surface-container-lowest/80 text-on-surface hover:text-primary backdrop-blur-md flex items-center justify-center transition-colors" onclick="toggleBookmark(this)" type="button">
+<span class="material-symbols-outlined text-[20px]">favorite</span>
+</button>
+</div>
+<!-- Bottom Floating Spec Highlights -->
+<div class="absolute bottom-3 left-4 right-4 flex justify-between items-end">
+<span class="text-on-surface-variant font-label-sm text-label-sm uppercase tracking-widest">JAKARTA SELATAN • FULL BPKB/FAKTUR</span>
+<span class="bg-surface-container-lowest/90 text-primary font-label-sm text-label-sm px-2 py-0.5 rounded font-mono">ODOMETER: 3.400 KM</span>
+</div>
+</div>
+<!-- Card Content Body -->
+<div class="p-space-md flex flex-col flex-grow justify-between gap-space-md">
+<div>
+<div class="flex flex-col md:flex-row md:items-baseline justify-between gap-2">
+<h3 class="font-headline-md text-headline-md text-on-surface">2023 Mercedes-Maybach GLS 600</h3>
+<div class="text-left md:text-right">
+<span class="font-label-sm text-label-sm text-outline uppercase block">Harga On The Road</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Rp 8.950.000.000</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+              Kenyamanan setara private jet. First-class lounge rear seating dengan pendingin champagne, Burmester High-End 3D Surround 1.610W, dan E-ACTIVE Body Control.
+            </p>
+<!-- 4 Micro Tech Specs Grid -->
+<div class="grid grid-cols-4 gap-2 mt-space-sm bg-surface-container-low p-space-sm rounded">
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Tenaga</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">557 HP + EQ</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Torsi</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">730 Nm</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Drive</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">4MATIC All-Wheel</span>
+</div>
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm uppercase">Mesin</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-mono">4.0L V8 Biturbo</span>
+</div>
+</div>
+</div>
+<!-- Olshop Luxury Actions -->
+<div class="flex flex-col sm:flex-row items-center gap-space-xs pt-space-xs">
+<button class="w-full sm:w-auto flex-1 bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md uppercase tracking-wider py-2.5 rounded font-bold transition-all shadow-md flex items-center justify-center gap-1.5" onclick="openBookingModal('2023 Mercedes-Maybach GLS 600', 'Rp 8.950.000.000')" type="button">
+<span class="material-symbols-outlined text-[18px]">key</span>
+<span>Ajukan Booking / Test Drive</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-highest hover:bg-surface-bright text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all flex items-center justify-center gap-1" onclick="openCreditSim('2023 Mercedes-Maybach GLS 600', 8950000000)" type="button">
+<span class="material-symbols-outlined text-[18px]">calculate</span>
+<span>Simulasi Kredit</span>
+</button>
+<button class="w-full sm:w-auto bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant hover:text-on-surface font-label-md text-label-md uppercase tracking-wider px-space-sm py-2.5 rounded transition-all" onclick="openSpecDrawer('maybach-gls')" type="button">
+              Detail Spek
+            </button>
+</div>
+</div>
+</article>
+</div>
+</section>
+<!-- 5. BANNER / CTA EKSKLUSIF WAJIB LOGIN & REGISTRASI VIP -->
+<section class="max-w-[1440px] w-full mx-auto px-margin-mobile md:px-margin my-space-xl">
+<div class="relative overflow-hidden bg-gradient-to-r from-surface-container-highest via-surface-container to-surface-container-low p-space-lg md:p-space-xl rounded-xl shadow-2xl">
+<!-- Decorative Glow -->
+<div class="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-primary/10 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-space-lg">
+<div class="flex flex-col gap-space-xs max-w-2xl text-center lg:text-left">
+<div class="flex items-center justify-center lg:justify-start gap-2 text-primary font-label-md text-label-md uppercase tracking-widest">
+<span class="material-symbols-outlined text-[20px]">enhanced_encryption</span>
+<span>Akses Dokumen Rahasia &amp; Nilai Penawaran Tertutup</span>
+</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface">
+            Masuk atau Daftarkan Akun VIP Anda
+          </h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+            Untuk melindungi privasi pemilik sebelumnya dan keabsahan legalitas, salinan digital BPKB, Faktur Bea Cukai, serta Riwayat Servis Bengkel Resmi hanya dapat diunduh oleh akun terverifikasi.
+          </p>
+<div class="flex flex-wrap items-center justify-center lg:justify-start gap-space-md pt-2 text-outline font-label-sm text-label-sm uppercase tracking-wider">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">check_circle</span> Enkripsi Dokumen 256-bit</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">check_circle</span> Undangan Lelang Off-Market</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px] text-primary">check_circle</span> Konsinyasi Tanpa Biaya Listing</span>
+</div>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-space-sm shrink-0 w-full lg:w-auto">
+<button class="w-full sm:w-auto bg-surface-container-lowest hover:bg-surface-bright text-on-surface font-label-lg text-label-lg uppercase tracking-widest px-space-lg py-3 rounded transition-all" onclick="openAuthModal('login')" type="button">
+            Masuk Akun
+          </button>
+<button class="w-full sm:w-auto bg-primary text-on-primary hover:bg-primary-fixed-dim font-label-lg text-label-lg uppercase tracking-widest font-bold px-space-lg py-3 rounded shadow-xl hover:shadow-2xl transition-all" onclick="openAuthModal('register')" type="button">
+            Daftar Mitra Pembeli
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- MODAL: KONSULTASI ADVISOR (Interactive) -->
+<div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4" id="advisorModal">
+<div class="bg-surface-container w-full max-w-lg rounded-xl p-space-lg shadow-2xl relative">
+<button class="absolute top-4 right-4 text-outline hover:text-on-surface" onclick="closeAdvisorModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="flex items-center gap-space-sm mb-space-md">
+<div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[28px]">support_agent</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Konsultasi Privat Pialang</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface" id="modalAdvisorName">Nama Advisor</h3>
+<span class="font-mono text-label-sm text-primary" id="modalAdvisorCode">KODE</span>
+</div>
+</div>
+<form class="flex flex-col gap-space-sm" onsubmit="handleAdvisorSubmit(event)">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Nama Lengkap Anda</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" placeholder="Gelar / Nama Lengkap" required="" type="text"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Nomor WhatsApp VIP / Telepon</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" placeholder="+62 81..." required="" type="tel"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Unit Kendaraan Yang Diminati</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" placeholder="Misal: Porsche 911 GT3 RS / Alokasi Khusus" type="text"/>
+</div>
+<div class="pt-2 flex items-center justify-end gap-space-sm">
+<button class="font-label-md text-label-md uppercase text-outline hover:text-on-surface px-space-sm py-2" onclick="closeAdvisorModal()" type="button">Batal</button>
+<button class="bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider font-bold px-space-md py-2 rounded hover:bg-primary-fixed-dim transition-colors" type="submit">Kirim Permintaan Privat</button>
+</div>
+</form>
+</div>
+</div>
+<!-- MODAL: SIMULASI KREDIT MEWAH (Interactive) -->
+<div class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4" id="creditModal">
+<div class="bg-surface-container w-full max-w-md rounded-xl p-space-lg shadow-2xl relative">
+<button class="absolute top-4 right-4 text-outline hover:text-on-surface" onclick="closeCreditSim()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="mb-space-md">
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-widest">Kalkulator Pembiayaan VIP AuraPrivilege</span>
+<h3 class="font-headline-sm text-headline-sm text-on-surface" id="simCarName">Nama Kendaraan</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Bunga preferensial 2.45% p.a. flat rekanan perbankan tier-1.</p>
+</div>
+<div class="flex flex-col gap-space-sm">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Uang Muka / DP (Min 30%)</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" id="simDpPct" onchange="calculateInstallment()">
+<option value="0.30">30% Down Payment</option>
+<option value="0.40">40% Down Payment</option>
+<option selected="" value="0.50">50% Down Payment</option>
+</select>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Tenor Pembiayaan</label>
+<select class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" id="simTenor" onchange="calculateInstallment()">
+<option value="12">12 Bulan (1 Tahun)</option>
+<option value="24">24 Bulan (2 Tahun)</option>
+<option selected="" value="36">36 Bulan (3 Tahun)</option>
+<option value="48">48 Bulan (4 Tahun)</option>
+</select>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded mt-2 flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Estimasi Angsuran / Bulan:</span>
+<span class="font-headline-sm text-headline-sm text-primary font-mono" id="simInstallmentResult">Rp 0 / bln</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">*Belum termasuk asuransi all-risk comprehensive &amp; biaya fidusia.</span>
+</div>
+<div class="pt-2">
+<button class="w-full bg-primary text-on-primary font-label-md text-label-md uppercase font-bold py-2.5 rounded hover:bg-primary-fixed-dim transition-all" onclick="alert('Permintaan simulasi kredit lengkap telah diteruskan ke tim Private Banker kami.'); closeCreditSim();">
+            Ajukan Pre-Approval Instan
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- MODAL: LOGIN / REGISTER BANNER ACTION -->
+<div class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden items-center justify-center p-4" id="authModal">
+<div class="bg-surface-container w-full max-w-md rounded-xl p-space-lg shadow-2xl relative">
+<button class="absolute top-4 right-4 text-outline hover:text-on-surface" onclick="closeAuthModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="text-center mb-space-md">
+<div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/20 text-primary mb-2">
+<span class="material-symbols-outlined text-[28px]">lock_person</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-on-surface" id="authModalTitle">Portal Anggota VIP</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Akses eksklusif dokumen legalitas dan harga penawaran rahasia.</p>
+</div>
+<form class="flex flex-col gap-space-sm" onsubmit="handleAuthSubmit(event)">
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Email Kehormatan</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" placeholder="nama@domain.com" required="" type="email"/>
+</div>
+<div>
+<label class="font-label-sm text-label-sm text-on-surface-variant uppercase">Kata Sandi</label>
+<input class="w-full bg-surface-container-lowest text-on-surface font-body-sm text-body-sm px-space-sm py-2 rounded focus:outline-none mt-1" placeholder="••••••••" required="" type="password"/>
+</div>
+<div class="flex items-center justify-between text-outline font-label-sm text-label-sm">
+<label class="flex items-center gap-1.5 cursor-pointer">
+<input class="accent-primary rounded" type="checkbox"/> Ingat sesi ini
+          </label>
+<a class="hover:text-primary transition-colors" href="#">Lupa sandi?</a>
+</div>
+<button class="bg-primary text-on-primary font-label-md text-label-md uppercase font-bold py-2.5 rounded hover:bg-primary-fixed-dim transition-all mt-2" id="authSubmitBtn" type="submit">
+          Masuk Sekarang
+        </button>
+</form>
+</div>
+</div>
+<script>
+    // Global vehicle price state for simulation
+    let currentCarPrice = 11850000000;
+
+    // Filter Logic
+    function applyVehicleFilter() {
+      const brandVal = document.getElementById('filterBrand').value;
+      const typeVal = document.getElementById('filterType').value;
+      const priceVal = document.getElementById('filterPrice').value;
+
+      const cards = document.querySelectorAll('.vehicle-card');
+
+      cards.forEach(card => {
+        const cBrand = card.getAttribute('data-brand');
+        const cType = card.getAttribute('data-type');
+        const cPrice = parseFloat(card.getAttribute('data-price'));
+
+        let matchBrand = (brandVal === 'all' || cBrand === brandVal);
+        let matchType = (typeVal === 'all' || cType === typeVal);
+        let matchPrice = true;
+
+        if (priceVal === 'under10') matchPrice = (cPrice < 10);
+        else if (priceVal === '10to15') matchPrice = (cPrice >= 10 && cPrice <= 15);
+        else if (priceVal === 'above15') matchPrice = (cPrice > 15);
+
+        if (matchBrand && matchType && matchPrice) {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function resetFilters() {
+      document.getElementById('filterBrand').value = 'all';
+      document.getElementById('filterType').value = 'all';
+      document.getElementById('filterPrice').value = 'all';
+      applyVehicleFilter();
+    }
+
+    // Bookmark Favorite Toggle
+    function toggleBookmark(btn) {
+      const icon = btn.querySelector('.material-symbols-outlined');
+      if (icon.textContent === 'favorite') {
+        icon.textContent = 'favorite';
+        btn.classList.toggle('text-primary');
+      }
+    }
+
+    // Advisor Modal
+    function openAdvisorModal(name, code) {
+      document.getElementById('modalAdvisorName').textContent = name;
+      document.getElementById('modalAdvisorCode').textContent = 'ID RESMI: ' + code;
+      const modal = document.getElementById('advisorModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAdvisorModal() {
+      const modal = document.getElementById('advisorModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleAdvisorSubmit(e) {
+      e.preventDefault();
+      alert('Pesan Anda telah diteruskan secara terenkripsi ke Advisor terkait. Tim kami akan menghubungi Anda via jalur pribadi.');
+      closeAdvisorModal();
+    }
+
+    // Credit Simulator Modal
+    function openCreditSim(name, price) {
+      currentCarPrice = price;
+      document.getElementById('simCarName').textContent = name;
+      calculateInstallment();
+      const modal = document.getElementById('creditModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeCreditSim() {
+      const modal = document.getElementById('creditModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function calculateInstallment() {
+      const dpPct = parseFloat(document.getElementById('simDpPct').value);
+      const months = parseInt(document.getElementById('simTenor').value);
+      const principal = currentCarPrice * (1 - dpPct);
+      const annualRate = 0.0245; // 2.45% bunga p.a
+      const totalInterest = principal * (annualRate * (months / 12));
+      const monthlyPmt = Math.round((principal + totalInterest) / months);
+
+      const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(monthlyPmt);
+      document.getElementById('simInstallmentResult').textContent = formatted + ' / bulan';
+    }
+
+    // Auth Modal (Login / Register)
+    function openAuthModal(mode) {
+      const title = document.getElementById('authModalTitle');
+      const submitBtn = document.getElementById('authSubmitBtn');
+      if (mode === 'register') {
+        title.textContent = 'Registrasi Mitra Pembeli VIP';
+        submitBtn.textContent = 'Daftarkan Akun VIP';
+      } else {
+        title.textContent = 'Masuk Portal Anggota';
+        submitBtn.textContent = 'Masuk Sekarang';
+      }
+      const modal = document.getElementById('authModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAuthModal() {
+      const modal = document.getElementById('authModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      alert('Autentikasi dua faktor berhasil. Sesi VIP aktif untuk meninjau riwayat BPKB dan faktur digital.');
+      closeAuthModal();
+    }
+
+    function openBookingModal(carName, price) {
+      alert('Pengajuan Booking Unit: ' + carName + ' (' + price + ') berhasil dicatat. Concierge AuraMotors akan menjadwalkan private preview di SCBD Penthouse.');
+    }
+
+    function openSpecDrawer(slug) {
+      alert('Membuka Lembar Spesifikasi Teknis Pabrikan Maranello/Stuttgart untuk unit ini. (Dossier PDF siap diunduh)');
+    }
+  </script>
+</div></main><footer class="w-full bg-surface-container-lowest pt-space-xl pb-space-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"><div class="max-w-[1440px] mx-auto px-margin"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-xl pb-space-xl"><div class="flex flex-col gap-space-md"><div class="flex items-center gap-space-sm"><img alt="AuraMotors Crest Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2s23brHLde2tIkrgA5v97FFYOjpbWZ2M5BMDUAGsOD8-XmzQbUslMCoHH9jBNLDOvPEEJdvuKTevnRlcqjjPeG_3huU9VWjTkuBqAhK-e080g2VWRLpPWZm40kasjoGQuY-aAaiHf-DDsY7m_8Lr3L2_p05ZLezJvVs-pnzS1L2U5Q1gxiq6uWaBZPEFlxV7niHC01iBL1-Fj1Mn2KQrRO3HiT7WacYiv9I4koMlEIkSM4mmpQpAo"/><span class="font-headline-sm text-headline-sm uppercase tracking-widest text-primary">AuraMotors</span></div><p class="font-body-sm text-body-sm text-on-surface-variant font-light leading-relaxed">Sanctuary otomotif paling prestisius di Asia Pasifik. Kurasi mahakarya hypercar, grand tourer langka, dan koleksi heritage berlisensi internasional dengan privasi paripurna.</p><div class="flex items-center gap-space-xs pt-space-xs"><span class="material-symbols-outlined text-primary text-[20px]">verified_user</span><div class="flex flex-col"><span class="font-label-sm text-label-sm uppercase tracking-widest text-on-surface font-bold">Jaminan Proteksi Pembeli 100%</span><span class="font-label-sm text-label-sm text-on-surface-variant">Escrow Terproteksi &amp; Legalitas Provenance Resmi</span></div></div></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg uppercase tracking-widest text-on-surface font-bold">Sanctuary Showroom</span><div class="flex flex-col gap-space-xs pt-1"><div class="bg-surface-container-low/60 p-space-sm rounded"><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">Jakarta Flagship</span><p class="font-body-sm text-body-sm text-on-surface-variant">District 8 SCBD, Treasury Tower Penthouse Wing</p></div><div class="bg-surface-container-low/60 p-space-sm rounded"><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">Surabaya Lounge</span><p class="font-body-sm text-body-sm text-on-surface-variant">Pakuwon West Boulevard, Private Pavilion #09</p></div><div class="bg-surface-container-low/60 p-space-sm rounded"><span class="font-label-md text-label-md text-primary font-bold uppercase tracking-wider">Bali Estate Atelier</span><p class="font-body-sm text-body-sm text-on-surface-variant">Uluwatu Clifftop Retreat, VIP Helipad Access</p></div></div></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg uppercase tracking-widest text-on-surface font-bold">Afiliasi Resmi &amp; Lisensi</span><ul class="flex flex-col gap-space-xs pt-1"><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-space-xs"><span class="material-symbols-outlined text-outline text-[16px]">shield</span>FIA Heritage Certifications</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-space-xs"><span class="material-symbols-outlined text-outline text-[16px]">military_tech</span>Maranello Classiche Provenance</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-space-xs"><span class="material-symbols-outlined text-outline text-[16px]">diamond</span>Sant'Agata Polo Storico Guild</li><li class="font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-space-xs"><span class="material-symbols-outlined text-outline text-[16px]">speed</span>Goodwood Members Concierge</li></ul></div><div class="flex flex-col gap-space-sm"><span class="font-label-lg text-label-lg uppercase tracking-widest text-on-surface font-bold">Warta Kolektor Prive</span><p class="font-body-sm text-body-sm text-on-surface-variant">Dapatkan buletin mingguan alokasi slot terbatas dan undangan preview tertutup lelang privat.</p><form class="flex flex-col gap-space-xs pt-1"><div class="flex items-center bg-surface-container-low rounded p-1"><input class="bg-transparent w-full px-space-sm py-1.5 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none" placeholder="Surel kehormatan Anda..." type="email"/><button class="bg-primary text-on-primary px-space-md py-1.5 rounded font-label-md text-label-md font-bold tracking-widest uppercase hover:bg-primary-fixed-dim transition-colors shrink-0" type="submit">Kirim</button></div><span class="font-label-sm text-label-sm text-outline">Privasi terjamin melalui enkripsi SHA-256. Tanpa spam.</span></form></div></div><div class="pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md"><span class="font-label-sm text-label-sm text-outline tracking-wider">© 2025 AURAMOTORS LUXURY SANCTUARY. HAK CIPTA DILINDUNGI UNDANG-UNDANG.</span><div class="flex items-center gap-space-md"><a class="font-label-sm text-label-sm text-outline hover:text-primary tracking-widest uppercase transition-colors" href="#">Protokol Kerahasiaan</a><a class="font-label-sm text-label-sm text-outline hover:text-primary tracking-widest uppercase transition-colors" href="#">Ketentuan Lelang</a><a class="font-label-sm text-label-sm text-outline hover:text-primary tracking-widest uppercase transition-colors" href="#">Kualifikasi Escrow</a></div></div></div></footer></body></html>

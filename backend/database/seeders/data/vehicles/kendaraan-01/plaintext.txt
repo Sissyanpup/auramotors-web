@@ -1,0 +1,65 @@
+==================================================
+DATA ALOKASI KOLEKSI - AURAMOTORS
+==================================================
+
+[UNIT ALOKASI]
+VIN: WP0AF2A97R0195421
+Status VIN: MATCHING NUMBERS 100%
+Nama Unit: 2024 Porsche 911 GT3 RS
+Kategori: STUTTGART PURBRED COUPÉ
+Deskripsi: Weissach Package Lightweight Carbon Specs - Eksterior GT Silver Metallic dengan Aksen Kontras Pyro Red
+Tenaga: 525 HP
+Akselerasi: 3.2 Detik
+Mesin: 4.0L Boxer
+Odometer: 128 km
+Status Registrasi: Unregistered
+Harga Pokok Unit: IDR 11.850.000.000
+Gambar Utama: porsche-911-gt3-rs.jpg
+
+--------------------------------------------------
+[LAYANAN TAMBAHAN VIP CONCIERGE]
+--------------------------------------------------
+1. Paket Balik Nama Kilat Samsat Khusus
+   - Harga: IDR 185.000.000
+   - Status: Terpilih (Checked)
+   - Deskripsi: Termasuk alokasi Nopol pilihan VIP 1-Angka (e.g. B 1 RSE), Form B/C Bea Cukai, BPKB & STNK resmi atas nama pembeli tanpa antre.
+
+2. Detailing Ceramic Coating & Full PPF Self-Healing Xpel
+   - Harga: IDR 65.000.000
+   - Status: Terpilih (Checked)
+   - Deskripsi: Aplikasi proteksi bodi penuh ketebalan 8.5 mil (anti-batu kerikil sirkuit & self-healing) plus multi-layer Qtechniq nano glass coating.
+
+3. Asuransi Total Loss & All Risk Supercar (1 Tahun)
+   - Harga: IDR 120.000.000
+   - Status: Terpilih (Checked)
+   - Deskripsi: Penjaminan nilai penuh tanpa depresiasi, mencakup track-day coverage (sirkuit Mandalika/Sentul), banjir, huru-hara, dan direct towing.
+
+4. Pengiriman Towing Hidrolik Tertutup Jabodetabek
+   - Harga Normal: IDR 7.500.000
+   - Harga Diskon: GRATIS PROMO SANCTUARY (IDR 0)
+   - Status: Tidak Terpilih (Unchecked)
+   - Deskripsi: Truk single-towing enclosed flatbed dengan lift hidrolik ultra-rendah untuk ground clearance sasis Weissach.
+
+--------------------------------------------------
+[RINGKASAN FINANSIAL / ESCROW ALLOCATION VAULT]
+--------------------------------------------------
+Nilai Pokok Alokasi Unit: IDR 11.850.000.000
+Layanan Tambahan Terpilih: IDR 370.000.000
+Biaya Escrow Custodian & Legal Audit: GRATIS KOLEKTOR (IDR 0)
+Towing Hidrolik Khusus: IDR 0 (JABODETABEK)
+TOTAL NILAI AKUISISI PARIPURNA: IDR 12.220.000.000
+DEPOSIT PENGUNCIAN UNIT (DP 10%): IDR 1.222.000.000
+
+--------------------------------------------------
+[INSPEKSI & HERITAGE CERTIFICATION]
+--------------------------------------------------
+Sertifikasi: 150-Point Heritage Certification Lulus Tanpa Catatan
+Detail: Inspeksi kompresi silinder flat-six, transmisi PDK 7-speed, sasis carbon monocoque, dan bebas riwayat banjir maupun kecelakaan sirkuit. Laporan forensik fisik akan diserahkan dalam folder kulit bersama BPKB.
+
+--------------------------------------------------
+[KONTAK CONCIERGE]
+--------------------------------------------------
+Nama: Raza Mahardika
+Jabatan: Head of Escrow & Sovereign Banking
+Telepon Direct: +62 811-9988-7722
+Foto Profile: raza-mahardika.jpg

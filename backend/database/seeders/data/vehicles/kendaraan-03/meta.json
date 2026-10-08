@@ -1,0 +1,18 @@
+{
+  "brand": "Mitsubishi",
+  "model": "Xpander Ultimate",
+  "year": 2023,
+  "price": 265000000,
+  "mileage": 9500,
+  "location": "Surabaya",
+  "description": "Mitsubishi Xpander 2023 varian Ultimate CVT dengan kilometer sangat rendah 9.500 km — kondisi mendekati showroom baru. Garansi mesin masih aktif hingga 2026 dan dapat dialihkan ke pemilik baru.\n\nVarian tertinggi Xpander ini hadir dengan fitur lengkap: Adaptive Cruise Control, kamera 360-degree, sistem audio premium, dan kursi baris kedua captain seat yang bisa dilipat rata lantai. Interior leather sintetis hitam dengan aksen merah memberikan kesan sporty yang elegan.\n\nSurat-surat lengkap atas nama pemilik pertama, tidak ada riwayat kecelakaan. Proses kredit dan balik nama dapat dibantu penuh.",
+  "specs": {
+    "transmisi": "CVT Otomatis",
+    "bahan_bakar": "Bensin",
+    "warna": "Quartz White",
+    "mesin": "1.499cc MIVEC",
+    "kapasitas_penumpang": 7,
+    "tipe": "MPV",
+    "fitur": "Adaptive Cruise Control, Kamera 360°, Captain Seat"
+  }
+}

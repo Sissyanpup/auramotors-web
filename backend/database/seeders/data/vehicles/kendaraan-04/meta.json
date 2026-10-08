@@ -1,0 +1,20 @@
+{
+  "brand": "Rolls-Royce",
+  "model": "Ghost EWB",
+  "year": 2021,
+  "price": 12450000000,
+  "mileage": 4800,
+  "location": "Jakarta Selatan",
+  "description": "Rolls-Royce Ghost Extended Wheelbase 2021 dalam konfigurasi bespoke Midnight Sapphire — salah satu warna paling eksklusif dari palette Rolls-Royce — dengan coachline Mandarin Orange buatan tangan yang dikerjakan oleh pengrajin Goodwood.\n\nInterior menampilkan Shooting Star Headliner: ratusan titik cahaya fiber optik yang tertanam di langit-langit kabin, menciptakan ilusi bintang jatuh di malam hari. Didukung sistem audio Bespoke yang dirancang khusus untuk akustik kabin Ghost, serta kursi belakang massager dengan pemanas dan ventilasi.\n\nMesin 6.75L V12 twin-turbo menghasilkan torsi 850 Nm yang tersalur lembut melalui transmisi 8-percepatan — menciptakan sensasi berkendara Magic Carpet Ride yang menjadi ciri khas Rolls-Royce. Odometer 4.800 km dengan histori servis penuh dan terdokumentasi di Eurokars. BPKB asli, VIN terverifikasi.",
+  "specs": {
+    "transmisi": "Otomatis 8-percepatan",
+    "bahan_bakar": "Bensin",
+    "warna": "Midnight Sapphire / Mandarin Orange Coachline",
+    "mesin": "6.75L V12 Twin-Turbo",
+    "torsi": "850 Nm",
+    "kapasitas_penumpang": 5,
+    "tipe": "Sedan Mewah",
+    "varian": "Extended Wheelbase",
+    "fitur": "Shooting Star Headliner, Bespoke Audio, Kursi Massager"
+  }
+}

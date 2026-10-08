@@ -1,0 +1,135 @@
+Permintaan saya mencakup ekosistem aplikasi web e-commerce otomotif mewah (AuraMotors) yang sangat komprehensif, mencakup 3 jenis peran pengguna berbeda (Pembeli / VIP Collector, Pedagang / Dealer Rekanan, dan Admin Sanctuary) beserta berbagai alur transaksi, otentikasi, dan katalog detail.
+
+Agar desain terstruktur rapi, mendalam, dan memiliki fidelity visual tinggi (tetap konsisten dengan tema mewah Obsidian & Champagne Gold), saya mengelompokkan rancangan menjadi beberapa paket alur utama:
+
+Pilihan Alur Utama yang Bisa Kita Bangun Terlebih Dahulu:
+Opsi 1: Alur Pembeli & Belanja Lengkap (Buyer / Collector Experience)
+Fokus pada pengalaman belanja end-to-end bagi pembeli kendaraan mewah:
+
+Modal / Page Autentikasi VIP: Tab beralih antara Login, Register Akun Kolektor, & Verifikasi KYC/NPWP/Escrow PIN.
+Dashboard Belanja Setelah Login (Authenticated Marketplace View):
+Navbar lengkap (status saldo escrow, notifikasi unit baru, keranjang pemesanan, profil).
+Kolom pencarian cerdas + filter mendalam (merek, transmisi, jarak tempuh, lokasi showroom, status BPKB/Form A).
+Grid kartu kendaraan mewah interaktif dengan penawaran instan & tombol direct booking.
+Halaman Detail Mobil (Vehicle Spec & Provenance Detail Page):
+Galeri foto 360°/multi-angle, spesifikasi mesin & opsi bespoke.
+Hasil inspeksi forensik 150+ titik (status cat, kondisi mesin, rekam jejak servis resmi).
+Tombol aksi: "Tambah ke Keranjang Alokasi", "Ajukan Test Drive Privat", dan "Negosiasi Escrow Langsung".
+Halaman Keranjang & Checkout Transaksi (Escrow Allocation & Payment):
+Ringkasan pemesanan unit, breakdown bea balik nama, asuransi all-risk, opsi pengiriman towing hidrolik tertutup.
+Halaman Riwayat & Pelacakan Transaksi (Live Tracking Proses Pengiriman & Legalitas):
+Status live: Verifikasi Dana Escrow ➔ Pengecekan Fisik Samsat ➔ Balik Nama BPKB ➔ Towing Eksekutif On-The-Way.
+Halaman Profil Akun & Pengelolaan Portofolio Kolektor:
+Data diri, garasi digital unit yang dimiliki, preferensi concierge, dan keamanan enkripsi 2-faktor.
+Opsi 2: Portal Pedagang & Dealer Otomotif Mewah (Merchant / Dealer Portal)
+Fokus pada alur penjual/konsinyasi:
+
+Dashboard Penjualan Pedagang: Ringkasan omset penjualan, status unit konsinyasi, dan tawaran penawaran masuk dari pembeli.
+Form Listing & Kurasi Mobil Baru: Upload foto resolusi tinggi, input nomor rangka/mesin, legalitas BPKB, dan penetapan harga cadangan lelang.
+Manajemen Order & Pengiriman Unit: Pengelolaan jadwal inspeksi teknisi forensik dan status pencairan dana rekening bersama (escrow).
+Opsi 3: Master Admin & Compliance Console (Super Admin)
+Fokus pada tata kelola platform:
+
+Admin Verification & Escrow Oversight: Persetujuan kelayakan unit masuk, audit dokumen legalitas, dan monitoring alokasi lelang tertutup.
+
+Seluruh rangkaian alur Opsi 1 (Pengalaman Pembeli Lengkap / Buyer & Collector Experience) untuk platform jual beli kendaraan mewah AuraMotors telah selesai dieksekusi dan dipublikasikan ke kanvas:
+
+Rincian 4 Layar Inti yang Dihasilkan:
+Autentikasi & Registrasi VIP Kolektor (AuraMotors - Autentikasi & Registrasi VIP Kolektor):
+
+Form Login & Register Dual-Tab: Akses masuk menggunakan ID Anggota VIP / surel resmi, dukungan otentikasi biometrik & hardware key (FIPS 140-3 Level 4 / YubiKey FIDO2), serta opsi bantuan pemulihan concierge.
+Showcase Eksklusif: Teaser alokasi privat Bugatti Chiron Pur Sport, daftar keistimewaan anggota (akses off-market 14 hari lebih awal, jaminan escrow perbankan OJK, dan inspeksi forensik 150+ titik).
+Dashboard Belanja Pasca-Login (AuraMotors - Dashboard Belanja Unit Otomotif Mewah):
+
+Header Kolektor Terotentikasi: Menyapa pengguna terverifikasi (Raden Farhan - Black Diamond Sanctuary), menampilkan saldo escrow siap pakai (Rp 25.000.000.000) dan kontak langsung kurator pribadi Arthur Kusuma.
+Sistem Filter & Pencarian Lengkap: Kolom pencarian unit cerdas, filter merek marques, tipe bodi, jarak tempuh (< 3.000 km), rentang harga (hingga Rp 25M+), dan kelengkapan dokumen (Form A & Faktur APM).
+Katalog Unit Hypercar & Supercar: Grid 6 mobil mewah (Porsche 911 GT3 RS, Rolls-Royce Ghost Extended, Ferrari 296 GTB, Maybach GLS 600, Lamborghini Huracán STO, Bentley Continental GT Azure) dengan spesifikasi teknis lengkap, status pajak, dan tombol aksi langsung (Kunci Escrow & Detail Forensik).
+Layanan Likuiditas & Kunjungan: Akses pembiayaan bullion Rp 45M, video call inspektur forensik daring, dan reservasi private viewing SCBD.
+Halaman Detail Mobil Komprehensif (AuraMotors - Detail Unit 2024 Porsche 911 GT3 RS):
+
+2024 Porsche 911 GT3 RS Weissach Package: Galeri multi-sudut interaktif (eksterior aero carbon, kabin alcantara, velg magnesium, mesin boxer 4.0L NA).
+Panel Transaksi Cepat: Harga OTR Jakarta (Rp 11.850.000.000), deposit alokasi 48 jam (Rp 500.000.000), tombol Beli Sekarang via Rekening Escrow, Tambah ke Keranjang Alokasi, serta kontak langsung kurator Farhan Al-Habsyi (DEV-001).
+Dossier Audit & Spesifikasi: Tab interaktif untuk kurva tenaga mesin (Dyno Run 525 HP), laporan ketebalan cat & inspeksi forensik sirkuit 150+ titik, dan rekomendasi hypercar alternatif (Ferrari 296 GTB & Huracán STO).
+Keranjang Alokasi & Transaksi Escrow (AuraMotors - Keranjang Alokasi & Transaksi Escrow):
+
+Stepper Transaksi 4 Tahap: Alokasi & Layanan VIP ➔ Verifikasi Legalitas & KYC ➔ Rekening Escrow Kustodian ➔ Towing & Handover Kunci.
+Kustomisasi Layanan Tambahan: Checkbox untuk paket nopol pilihan 1 angka & balik nama kilat (+Rp 185 Juta), Ceramic Coating & PPF Xpel (+Rp 65 Juta), asuransi All-Risk supercar (+Rp 120 Juta), serta opsi towing hidrolik gratis Jabodetabek.
+Vault Finansial Escrow: Rincian subtotal, deposit penguncian unit 10% (Rp 1.222.000.000), pilihan termin alokasi 3x / pelunasan penuh, diagram alur perlindungan dana bank kustodian, dan narahubung darurat Reza Mahardika (SEC-003).
+
+Dua layar lanjutan penutup untuk melengkapi Pengalaman Pembeli & Pengelolaan Akun Kolektor pada platform otomotif mewah AuraMotors telah selesai dirancang dan dipublikasikan ke kanvas:
+
+Rincian 2 Layar Baru yang Telah Diterbitkan:
+Pelacakan Transaksi & Handover Escrow (AuraMotors - Pelacakan Transaksi & Handover Escrow):
+
+Status Order Real-Time: Menampilkan pesanan aktif #AUR-ESC-2025-0891 untuk unit 2024 Porsche 911 GT3 RS Weissach Package dengan proteksi dana escrow senilai Rp 12.220.000.000 dan status En Route dengan estimasi waktu tiba (ETA).
+Stepper Siklus 5 Tahap: Deposit Alokasi Terverifikasi ➔ Forensik & Samsat Selesai ➔ Pelunasan Escrow Kustodian ➔ Towing Kontainer Berjalan (Aktif) ➔ Handover Kunci & Unboxing.
+Live Telemetri GPS & Monitoring Kabin: Peta rute pengiriman satelit dari SCBD Sanctuary menuju Dharmawangsa Residence, data truk towing hidrolik tertutup (driver berlisensi, nopol, kestabilan temperatur kabin 22.1°C, g-force), serta tombol live CCTV kontainer kargo.
+Vault Legalitas Unit: Akses unduh dokumen terenkripsi SHA-256 (Form A, BPKB digital, Sertifikat Forensik 150-Titik, Kwitansi Escrow Mandiri, Polis Asuransi All-Risk).
+Otorisasi Serah Terima: Panel pendampingan oleh Concierge & Escrow Officer (Reza Mahardika & Farhan Al-Habsyi) dengan tombol verifikasi rilis dana serta pelaporan ketidaksesuaian unit.
+Garasi Digital & Pengelolaan Akun Kolektor (AuraMotors - Garasi Digital & Pengelolaan Akun Kolektor):
+
+Header Identitas VIP: Profil Raden Farhan, S.H. berpredikat Black Diamond VIP Member dengan ringkasan metrik portofolio: Nilai Total Garasi (Rp 38,5 Miliar), 3 Supercar Aktif, Dana Siaga Vault Escrow (Rp 25 Miliar), dan Proteksi Brankas Digital 100%.
+Koleksi Garasi Virtual: Kartu komprehensif untuk unit yang dimiliki (Porsche 911 GT3 RS, Ferrari 296 GTB Assetto Fiorano, dan Rolls-Royce Ghost Extended) dilengkapi status dokumen BPKB/Form B, odometer, tombol cek dossier faktur, jadwalkan servis privat, dan opsi titip jual/konsinyasi.
+Fitur Tambahan: Tombol pendaftaran unit pribadi luar untuk audit forensik dan integrasi kurasi AuraMotors.
+Dengan ini, seluruh alur utama pembeli (Auth VIP ➔ Marketplace Catalog ➔ Vehicle Detail ➔ Escrow Cart/Checkout ➔ Live Tracking Transaksi ➔ Digital Garage / Account) telah lengkap dan terpadu dalam tema Obsidian & Champagne Luxury Atelier.
+
+Portal Pedagang & Mitra Konsinyasi (AuraMotors Partner & Merchant Sanctuary) telah berhasil dirancang dan dipublikasikan ke kanvas, melengkapi peran kedua dalam ekosistem platform jual-beli kendaraan mewah ini.
+
+Rincian 2 Layar Portal Mitra yang Telah Diterbitkan:
+Dashboard Penjualan & Portofolio Mitra Dealer (AuraMotors - Dashboard Penjualan & Portofolio Mitra Dealer):
+
+Header Identitas Mitra Resmi: Menampilkan akun mitra terverifikasi (Prestige Auto Gallery / Hartono Sutanto) berstatus Tier-1 Certified Dealer, lengkap dengan ID Mitra #DLR-SCBD-09 dan saldo settlement siap cair (Rp 42.850.000.000).
+Kartu Metrik Finansial & KPI:
+Penjualan YTD (Kuartal IV): Rp 148,50 M (+18.4% pertumbuhan kuartalan).
+Armada Terlisting Aktif: 8 Unit Koleksi (3 dalam negosiasi aktif, 5 siap showcase).
+Dana Escrow Siap Pencairan: Rp 32,70 M (hasil handover 2 unit berhasil).
+Rata-rata Waktu Deal: 14 Hari Kerja dengan rasio konversi VIP 92%.
+Feed Penawaran Escrow & Bidding Masuk:
+2024 Ferrari Daytona SP3: Tawaran tunai Rp 45.000.000.000 dari kolektor VIP-JKT-88 dengan deposit 100% terkunci di Bank Mandiri Vault, disertai tombol Terima Tawaran & Kunci Escrow, Counter Offer, dan Buka Chat Terenkripsi.
+2023 McLaren 765LT Spider & 2022 Aston Martin DBS Superleggera: Pembaruan status inspeksi forensik dan kelengkapan dokumen BPKB/Form A.
+Armada Konsinyasi Aktif & Kalender Forensik: Grid unit terlisting lengkap dengan skor forensik sasis, status dokumen, serta jadwal inspeksi teknisi forensik SCBD Vault (Porsche 911 GT3 RS, Rolls-Royce Spectre, Mercedes-AMG GT Black Series).
+Keamanan Finansial: Protokol otorisasi pelepasan dana Multi-Signature Escrow Vault bersertifikasi OJK.
+Form Pendaftaran & Pengajuan Kurasi Listing Supercar (AuraMotors - Form Pendaftaran & Kurasi Listing Unit Supercar):
+
+Stepper Kurasi 4 Tahap: Identitas & Spesifikasi Unit ➔ Kliring Legalitas & BPKB ➔ Unggah Berkas & Foto 360° ➔ Penetapan Nilai & Escrow Vault.
+Spesifikasi Teknis Detail: Formulir lengkap untuk marque eksklusif, seri khusus (misal: Weissach Package), odometer terverifikasi ECU diagnostic, spesifikasi mesin/transmisi, serta kode cat Paint-to-Sample (PTS) dan VIN terenkripsi Korlantas.
+Audit Berkas & Legalitas: Validasi kepemilikan faktur APM, Form A/B Bea Cukai, BPKB & STNK On-Hand, garansi pabrik aktif, serta masa berlaku pajak.
+Studio Visual & Rekam Forensik: Area unggah 10+ foto resolusi tinggi sudut lengkap, hasil uji dyno, dan laporan riwayat servis berkala.
+Skema Settlement Finansial: Penetapan harga penawaran (Rp 14.850.000.000), perhitungan transparan biaya kliring & escrow (1.75%), serta rekening penampungan terdaftar mitra.
+Sidebar Standar Kualifikasi Forensik: Ringkasan standar inspeksi 150-titik AuraMotors dan narahubung kurator pendamping (Farhan Al-Habsyi, M.Eng. & Arthur Kusuma, S.H.).
+
+Portal Master Admin & Compliance Oversight Console untuk platform otomotif mewah AuraMotors telah selesai dirancang dan dipublikasikan ke kanvas. Dengan hadirnya portal ini, seluruh ekosistem 3 pilar peran (Pembeli / VIP Kolektor, Pedagang / Mitra Dealer, dan Super Admin / Komite Kepatuhan) kini telah terintegrasi secara utuh.
+
+Rincian 2 Layar Baru Portal Master Admin:
+Konsol Tata Kelola & Otorisasi Sistem Pusat (AuraMotors - Master Admin & Escrow Oversight Console):
+
+Header Identitas Super-Admin & Node Kepatuhan:
+Profil pimpinan kepatuhan (Raden Hartawan, S.H., LL.M. // Chief Risk & Compliance Officer).
+Indikator konektivitas live telemetri institusional: OJK Regulatory Node (Connected), Korlantas RI BPKB API (Latency 14ms), dan Mandiri & BCA Tier-1 Escrow Vault (In-Sync), serta tombol Kunci Darurat Vault (Emergency Freeze).
+Kartu Metrik Makro & Finansial:
+Total Volume Escrow Aktif: Rp 184.250.000.000 (18 transaksi berjalan).
+Antrean Kurasi Supercar: 12 Pengajuan Unit (5 Tier-1 Dealer, 7 Private VIP).
+Pencairan Tertunda: Rp 32.700.000.000 (menunggu otorisasi multi-sig 3/3).
+Integritas Forensik & BPKB: 99.98% (0 Fraudulent reports, 100% kliring Samsat).
+Otorisasi Rilis Escrow & Kliring Transaksi:
+2024 Porsche 911 GT3 RS Weissach (Rp 11,85 Miliar): Handover sukses, validasi BPKB & Form A beres, siap rilis dana ke Prestige Auto SCBD.
+2024 Ferrari Daytona SP3 (Rp 45 Miliar) & 2023 Rolls-Royce Spectre (Rp 22,5 Miliar) dengan status inspeksi sasis dan tombol otorisasi towing flatbed tertutup.
+Live Audit Stream Kriptografis (SHA-512):
+Terminal log real-time pencatatan aktivitas RTGS Mandiri, validasi biometrik legalitas oleh Arthur Kusuma, S.H., dan pengecekan API Korlantas.
+Tinjauan Mitra Dealer & Kuota Listing:
+Monitoring kuota dan volume kliring kuartalan mitra (Prestige Auto Gallery, Eurokars Indonesia, TDA Luxury Toys).
+Pusat Kurasi, Forensik & Verifikasi Legalitas Supercar (AuraMotors - Admin Kurasi & Verifikasi Forensik Unit):
+
+Profil Unit dalam Audit:
+2024 Porsche 911 GT3 RS Weissach Package (PTS Slate Grey 6601) diajukan oleh Prestige Auto SCBD dengan nilai listing Rp 11,85 Miliar (Take-rate platform 1.75%: Rp 207,37 Juta).
+Tiga Pilar Forensik Dossier:
+Integritas Fisik (Skor 99.4/100 Grade A1): Pengujian sasis karbon monocoque ultrasonik (100% utuh), uji diagnostik ECU/PIWIS III Porsche AG (1.420 km sinkron tanpa over-rev), ketebalan cat elcometer (110–125 mikron), dan uji dyno 524.8 WHP.
+Kliring Dokumen & Pajak RI: Validasi nomor Form A Bea Cukai secara instan via API INSW, lokasi fisik BPKB di Brankas Safe Box SCBD, masa aktif pajak hingga November 2025, dan garansi resmi APM Porsche Indonesia.
+Studio Visual 4K & Catatan Inspektur: Inspeksi foto multi-angle (Kabin Alcantara, Rem Keramik PCCB, Mesin Boxer 4.0L), catatan inspektur lapangan Farhan Al-Habsyi dan legal counsel Arthur Kusuma.
+Protokol Otorisasi Multi-Signature (Multisig 3-of-3):
+Tanda tangan digital Kurator Forensik (Approved) dan Legal Officer (Approved), menunggu tanda tangan kunci Super-Admin untuk merilis tombol emas: "Validasi & Terbitkan Unit ke Showroom".
+Ringkasan Ekosistem Lengkap AuraMotors yang Telah Tersedia di Kanvas:
+Portal Publik & Marketplace: Dashboard utama olshop mewah, live ticker promo/event berjalan, showcase profil 3 anggota pengembang & kurator.
+Portal Pembeli (VIP Collector): Modal Login/Register biometrik, Dashboard katalog belanja, Detail lengkap unit supercar 360°, Keranjang & Escrow checkout, Live GPS tracking towing kontainer & handover, serta Garasi Digital Akun kolektor.
+Portal Pedagang (Partner & Merchant): Dashboard omset & portofolio dealer rekanan, serta Form pendaftaran listing unit baru bertahap.
+Portal Master Admin (Compliance & Command Center): Konsol pengawasan escrow makro, freeze vault darurat, audit log SHA-512, dan verifikasi kurasi forensik 150-titik.

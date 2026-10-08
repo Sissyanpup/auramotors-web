@@ -1,0 +1,18 @@
+{
+  "brand": "Honda",
+  "model": "Jazz RS",
+  "year": 2020,
+  "price": 220000000,
+  "mileage": 25000,
+  "location": "Bandung",
+  "description": "Honda Jazz 2020 varian RS CVT, tangan pertama sejak baru. Bodi solid tanpa riwayat tabrakan, cat original masih berkilap merata di seluruh panel. Perawatan berkala disiplin di AHASS dengan buku servis lengkap.\n\nDilengkapi Honda Sensing (lane-keep assist, adaptive cruise control, collision mitigation), kamera mundur 180°, layar sentuh dengan Apple CarPlay, serta rem cakram di keempat roda. Konsumsi BBM efisien di kisaran 14–16 km/liter untuk pemakaian dalam kota.\n\nCocok sebagai daily driver yang nyaman sekaligus menyenangkan dikemudikan — pilihan tepat untuk mobilitas perkotaan yang aktif.",
+  "specs": {
+    "transmisi": "CVT Otomatis",
+    "bahan_bakar": "Bensin",
+    "warna": "Crystal Black Pearl",
+    "mesin": "1.500cc i-VTEC",
+    "kapasitas_penumpang": 5,
+    "tipe": "Hatchback",
+    "fitur": "Honda Sensing, Apple CarPlay, Kamera 180°"
+  }
+}

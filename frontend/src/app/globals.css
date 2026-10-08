@@ -1,0 +1,285 @@
+@import "tailwindcss";
+
+/*
+ * AuraMotors — tema "Obsidian & Champagne Gold".
+ * Dark mode adalah tema tetap aplikasi ini — marketplace kendaraan mewah.
+ */
+:root {
+  /* === Warna === */
+  --color-background: #121315;
+  --color-surface: #121315;
+  --color-surface-container: #1f2022;
+  --color-surface-container-high: #2a2b2e;
+  --color-border: #2c2d30;
+
+  --color-primary: #f2ca50;
+  --color-primary-container: #d4af37;
+  --color-on-primary: #1c1300;
+
+  --color-tertiary: #eec98f;
+  --color-on-tertiary: #1c1300;
+
+  --color-on-surface: #e3e2e5;
+  --color-on-surface-muted: #a1a0a5;
+
+  --color-success: #8fd6a4;
+  --color-success-container: #163a26;
+  --color-warning: #f5b26b;
+  --color-warning-container: #402a12;
+  --color-on-warning: #2a1a05;
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-neutral: #c7c6ca;
+  --color-neutral-container: #303134;
+
+  /* === Tipografi === */
+  --font-display: var(--font-bodoni), ui-serif, Georgia, serif;
+  --font-body: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-label: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme inline {
+  /* Warna */
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-surface-container: var(--color-surface-container);
+  --color-surface-container-high: var(--color-surface-container-high);
+  --color-border: var(--color-border);
+
+  --color-primary: var(--color-primary);
+  --color-primary-container: var(--color-primary-container);
+  --color-on-primary: var(--color-on-primary);
+
+  --color-tertiary: var(--color-tertiary);
+  --color-on-tertiary: var(--color-on-tertiary);
+
+  --color-on-surface: var(--color-on-surface);
+  --color-on-surface-muted: var(--color-on-surface-muted);
+
+  --color-success: var(--color-success);
+  --color-success-container: var(--color-success-container);
+  --color-warning: var(--color-warning);
+  --color-warning-container: var(--color-warning-container);
+  --color-on-warning: var(--color-on-warning);
+  --color-error: var(--color-error);
+  --color-error-container: var(--color-error-container);
+  --color-neutral: var(--color-neutral);
+  --color-neutral-container: var(--color-neutral-container);
+
+  /* Tipografi */
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-label: var(--font-label);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-geist-mono);
+
+  /* Radius "precision-cut" — tajam, bukan rounded konsumer */
+  --radius-xs: 0.0625rem;
+  --radius-sm: 0.125rem;
+  --radius-md: 0.1875rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.375rem;
+  --radius-2xl: 0.5rem;
+  --radius-3xl: 0.75rem;
+
+  /* Animasi — nama class = animate-{key} */
+  --animate-fade-up: fade-up 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.24s cubic-bezier(0, 0, 0.2, 1) both;
+  --animate-scale-in: scale-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shimmer: shimmer 1.8s linear infinite;
+}
+
+/* ============================================================
+   Keyframes
+   ============================================================ */
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1);    }
+}
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position:  200% 0; }
+}
+
+/* ============================================================
+   Stagger delay utilities  (dipakai bersama animate-fade-up)
+   ============================================================ */
+@layer utilities {
+  .animation-delay-75  { animation-delay:  75ms; }
+  .animation-delay-100 { animation-delay: 100ms; }
+  .animation-delay-150 { animation-delay: 150ms; }
+  .animation-delay-200 { animation-delay: 200ms; }
+  .animation-delay-300 { animation-delay: 300ms; }
+  .animation-delay-400 { animation-delay: 400ms; }
+  .animation-delay-500 { animation-delay: 500ms; }
+
+  /* Skeleton shimmer dengan nada gold tipis */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-container-high) 25%,
+      color-mix(in srgb, var(--color-primary) 5%, var(--color-surface-container-high)) 50%,
+      var(--color-surface-container-high) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+  }
+}
+
+/* ============================================================
+   Leaflet z-index override
+   ------------------------------------------------------------
+   Default Leaflet menaruh pane (400) & control (800-1000) tinggi
+   sehingga menutupi modal Tailwind `z-50`. Turunkan ke bawah 40
+   supaya semua overlay/modal (z-50, z-[9999]) selalu di atas peta.
+   ============================================================ */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 10 !important;
+}
+.leaflet-control {
+  z-index: 20 !important;
+}
+
+/* ============================================================
+   Komponen reusable
+   ============================================================ */
+@layer components {
+  /* Input field standar — transisi border + glow fokus */
+  .input-field {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--color-on-surface);
+    outline: none;
+    transition: border-color 0.2s cubic-bezier(0, 0, 0.2, 1),
+                box-shadow   0.2s cubic-bezier(0, 0, 0.2, 1);
+  }
+  .input-field::placeholder {
+    color: var(--color-on-surface-muted);
+  }
+  .input-field:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 14%, transparent);
+  }
+
+  /* Tombol utama — efek "gold rise" (brighter gold naik dari bawah) */
+  .btn-gold {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-image: linear-gradient(
+      to top,
+      var(--color-primary)           50%,
+      var(--color-primary-container) 50%
+    );
+    background-size: 100% 200%;
+    background-position: top;
+    color: var(--color-on-primary);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-position 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow           0.25s cubic-bezier(0, 0, 0.2, 1),
+                transform            0.15s cubic-bezier(0, 0, 0.2, 1),
+                opacity              0.2s;
+  }
+  .btn-gold:hover:not(:disabled) {
+    background-position: bottom;
+    box-shadow: 0 0 24px color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+  .btn-gold:active:not(:disabled) {
+    transform: scale(0.984);
+  }
+  .btn-gold:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  /* Nav link dengan animated underline */
+  .nav-link {
+    position: relative;
+    color: var(--color-on-surface-muted);
+    font-size: 0.875rem;
+    transition: color 0.2s cubic-bezier(0, 0, 0.2, 1);
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background-color: var(--color-primary);
+    transition: width 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .nav-link:hover {
+    color: var(--color-on-surface);
+  }
+  .nav-link:hover::after {
+    width: 100%;
+  }
+}
+
+/* ============================================================
+   Base styles
+   ============================================================ */
+
+body {
+  background: var(--color-background);
+  color: var(--color-on-surface);
+  font-family: var(--font-body);
+  accent-color: var(--color-primary-container);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+::selection {
+  background: var(--color-primary-container);
+  color: var(--color-on-primary);
+}
+
+/* Focus ring emas untuk keyboard navigation */
+:focus-visible {
+  outline: 1.5px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Scrollbar tipis sesuai tema gelap */
+* {
+  scrollbar-color: var(--color-surface-container-high) var(--color-surface);
+  scrollbar-width: thin;
+}
+
+/* Hormati preferensi reduced-motion pengguna */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+  }
+}
