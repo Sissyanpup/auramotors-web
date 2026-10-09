@@ -1,19 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/contexts/auth-context";
 
+type NotificationItem = {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  created_at: string | null;
+};
+
 type Summary = {
   cart: number;
   notifications: number;
+  notification_items: NotificationItem[];
   messages: number;
   chats: number;
 };
 
-const INITIAL_SUMMARY: Summary = { cart: 0, notifications: 0, messages: 0, chats: 0 };
+const INITIAL_SUMMARY: Summary = {
+  cart: 0,
+  notifications: 0,
+  notification_items: [],
+  messages: 0,
+  chats: 0,
+};
 
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -48,6 +63,102 @@ function IconButton({
       {children}
       <Badge count={count} />
     </Link>
+  );
+}
+
+function NotificationMenu({
+  count,
+  items,
+  allHref,
+  align,
+}: {
+  count: number;
+  items: NotificationItem[];
+  allHref: string;
+  align: "right" | "center";
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  const positionClass = align === "right" ? "right-0" : "left-1/2 -translate-x-1/2";
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-label={`Notifikasi transaksi${count > 0 ? ` (${count} baru)` : ""}`}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className="relative flex h-9 w-9 items-center justify-center rounded-md text-on-surface-muted transition-colors duration-150 hover:bg-surface-container hover:text-on-surface"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.5a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.1a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0m6 0H9" />
+        </svg>
+        <Badge count={count} />
+      </button>
+
+      {open && (
+        <div
+          className={`absolute ${positionClass} top-full z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-border bg-surface shadow-lg`}
+        >
+          <div className="flex items-center justify-between border-b border-border/50 px-4 py-3">
+            <span className="text-sm font-semibold text-on-surface">Notifikasi</span>
+            {count > 0 && <span className="font-mono text-xs text-on-surface-muted">{count} baru</span>}
+          </div>
+
+          {items.length === 0 ? (
+            <p className="px-4 py-6 text-center text-sm text-on-surface-muted">Belum ada notifikasi.</p>
+          ) : (
+            <ul className="max-h-80 overflow-y-auto">
+              {items.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className="block border-b border-border/30 px-4 py-3 transition-colors hover:bg-surface-container"
+                  >
+                    <p className="text-sm font-medium text-on-surface">{item.title}</p>
+                    <p className="mt-0.5 truncate text-xs text-on-surface-muted">{item.description}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <Link
+            href={allHref}
+            onClick={() => setOpen(false)}
+            className="block px-4 py-2.5 text-center text-xs font-medium text-on-surface-muted hover:bg-surface-container hover:text-on-surface"
+          >
+            Lihat semua transaksi
+          </Link>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -101,11 +212,12 @@ export default function NavbarActions({ variant = "desktop" }: { variant?: "desk
         </IconButton>
       )}
 
-      <IconButton href={notifHref} label="Notifikasi transaksi" count={summary.notifications}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.4-1.5a2 2 0 0 1-.6-1.4V11a6 6 0 1 0-12 0v3.1a2 2 0 0 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0m6 0H9" />
-        </svg>
-      </IconButton>
+      <NotificationMenu
+        count={summary.notifications}
+        items={summary.notification_items ?? []}
+        allHref={notifHref}
+        align={variant === "desktop" ? "right" : "center"}
+      />
 
       <IconButton href="/pesan" label="Pesan" count={summary.messages}>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-5 w-5">
