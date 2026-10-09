@@ -1,7 +1,7 @@
 # Data Dummy Seed
 
 Folder ini berisi data dummy untuk keperluan demo dan presentasi.
-Isi dengan file nyata, lalu jalankan `VehicleDummySeeder` untuk memasukkan ke database.
+Semua kendaraan di sini otomatis masuk ke database saat `composer demo-setup` (lihat README utama), dimiliki akun `seller@auramotors.test` dengan status approved.
 
 ---
 
@@ -12,7 +12,7 @@ data/
 ├── vehicles/
 │   ├── kendaraan-01/
 │   │   ├── meta.json       ← data teks kendaraan (wajib ada)
-│   │   ├── photos/         ← foto kendaraan (JPG/PNG, boleh lebih dari 1)
+│   │   ├── photos/         ← foto kendaraan (JPG/PNG, boleh lebih dari 1; kalau kosong, gambar di root folder dipakai)
 │   │   └── documents/      ← dokumen STNK/BPKB (JPG/PNG/PDF)
 │   ├── kendaraan-02/
 │   │   └── ...
@@ -34,6 +34,7 @@ data/
   "brand": "Nama Merek",
   "model": "Nama Model",
   "year": 2022,
+  "vin": "WP0AF2A97R0195421",
   "price": 195000000,
   "mileage": 18000,
   "location": "Kota, Provinsi",
@@ -54,6 +55,7 @@ data/
 | `brand` | string | Ya | Merek kendaraan |
 | `model` | string | Ya | Nama model |
 | `year` | integer | Ya | Tahun produksi |
+| `vin` | string | Tidak | VIN 17 karakter |
 | `price` | integer | Ya | Harga dalam Rupiah (tanpa titik/koma) |
 | `mileage` | integer | Ya | Odometer dalam km |
 | `location` | string | Ya | Kota tempat kendaraan berada |
@@ -85,15 +87,15 @@ data/
 
 ## Cara Menjalankan Seeder
 
-Setelah mengisi file di folder ini, jalankan dari folder `backend/`:
+Dari folder `backend/`:
 
 ```bash
-# Hanya seeder kendaraan (tidak reset database)
+# Tambah kendaraan baru saja (data lain tidak berubah)
 php artisan db:seed --class=VehicleDummySeeder
 
-# Atau reset semua + jalankan ulang dari awal
-php artisan migrate:fresh --seed
+# Reset semua data ke kondisi demo awal
+composer demo-setup
 ```
 
-> Seeder aman dijalankan berulang — kendaraan yang sudah ada (berdasarkan
+> Seeder aman dijalankan berulang. Kendaraan yang sudah ada (berdasarkan
 > kombinasi brand + model + year) tidak akan dibuat duplikat.

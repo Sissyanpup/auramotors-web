@@ -1,0 +1,21 @@
+{
+  "brand": "Lamborghini",
+  "model": "Sián FKP 37",
+  "year": 2020,
+  "vin": "ZHWUM6ZD5LLA08637",
+  "price": 58500000000,
+  "mileage": 850,
+  "location": "Jakarta Pusat",
+  "description": "Lamborghini Sián FKP 37 — hypercar hybrid pertama Lamborghini, diproduksi terbatas hanya 63 unit coupé di seluruh dunia. Nama FKP 37 adalah penghormatan untuk Ferdinand Karl Piëch yang lahir tahun 1937.\n\nMesin 6.5L V12 naturally aspirated dipadukan sistem mild-hybrid 48V berbasis superkapasitor (bukan baterai biasa) yang memberi dorongan tenaga instan. Tenaga gabungan mencapai 819 HP, menjadikannya Lamborghini jalan raya paling bertenaga pada masanya.\n\nOdometer 850 km, kondisi kolektor, dokumen impor lengkap dan VIN terverifikasi.",
+  "specs": {
+    "transmisi": "ISR 7-percepatan",
+    "bahan_bakar": "Bensin + Hybrid 48V Superkapasitor",
+    "warna": "Oro Electrum",
+    "mesin": "6.5L V12 + Mild-Hybrid 48V",
+    "tenaga": "819 HP",
+    "akselerasi": "0–100 km/h dalam 2,8 detik",
+    "kapasitas_penumpang": 2,
+    "tipe": "Coupé Hypercar",
+    "produksi": "63 unit coupé"
+  }
+}

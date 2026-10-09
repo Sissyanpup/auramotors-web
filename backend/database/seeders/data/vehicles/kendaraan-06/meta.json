@@ -1,0 +1,20 @@
+{
+  "brand": "Hyundai",
+  "model": "Santa Fe Hybrid",
+  "year": 2024,
+  "vin": "KMHS381HDRU123456",
+  "price": 875000000,
+  "mileage": 6200,
+  "location": "Bogor",
+  "description": "Hyundai Santa Fe Hybrid generasi terbaru (2024) dengan desain kotak tegas bergaya SUV petualang dan lampu signature H-pattern. Unit tangan pertama, odometer 6.200 km, servis rutin di dealer resmi Hyundai dan garansi pabrik masih aktif.\n\nMesin 1.6L Turbo GDi dipadukan motor listrik hybrid menghasilkan tenaga gabungan 235 PS dengan konsumsi BBM yang tetap irit. Kabin 7 penumpang dengan baris ketiga yang lega, panoramic curved display, serta fitur keselamatan Hyundai SmartSense (lane following assist, smart cruise control, blind-spot view monitor).\n\nEksterior Creamy White Pearl dengan pelek hitam 20 inci, bebas riwayat banjir maupun tabrakan. Surat-surat lengkap atas nama pemilik pertama.",
+  "specs": {
+    "transmisi": "Otomatis 6-percepatan",
+    "bahan_bakar": "Bensin + Hybrid",
+    "warna": "Creamy White Pearl",
+    "mesin": "1.6L Turbo GDi Hybrid",
+    "tenaga": "235 PS (gabungan)",
+    "kapasitas_penumpang": 7,
+    "tipe": "SUV",
+    "fitur": "Hyundai SmartSense, Panoramic Curved Display, Pelek 20 inci"
+  }
+}

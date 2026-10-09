@@ -43,6 +43,14 @@
             "npm install --ignore-scripts",
             "npm run build"
         ],
+        "demo-setup": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate:fresh --seed --force --ansi",
+            "@php -r \"@rmdir('public/storage');\"",
+            "@php artisan storage:link --ansi"
+        ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
