@@ -47,7 +47,9 @@ Aplikasi web marketplace kendaraan multi-role (**Admin, Seller, Buyer**) dengan 
 - Katalog publik dengan filter dan halaman detail kendaraan.
 - **Checkout** dengan skema pembayaran **DP (5/10/15/20%/custom) atau bayar penuh**.
 - **KYC buyer + Proof of Funds**, wajib untuk transaksi di atas ambang nilai (default Rp500 juta).
-- Halaman pembayaran simulasi (kartu, bank, OTP dummy) untuk demo offline.
+- **Portal bank simulasi** `/bank-portal/[reference]` (tema putih): kartu kredit/debit + 3-D Secure, PayPal, atau Virtual Account/internet banking, lalu OTP. Angka acak apa pun diterima; nomor kartu & CVV tidak disimpan.
+- **Rincian harga transparan**: komposisi pajak (DPP/PPN/PPnBM), premi asuransi per komponen, estimasi biaya balik nama Samsat, hak bersih penjual, total biaya kepemilikan, dan simulasi kredit 12–60 bulan.
+- **Asuransi detail** saat checkout: TLO/All Risk + perluasan (banjir, gempa, huru-hara, terorisme, TJH, kecelakaan diri, derek & mobil pengganti), risiko sendiri, dan pengecualian.
 - Tracking transaksi, konfirmasi serah-terima, pelaporan dispute, dan nota transaksi.
 
 ### Admin
@@ -61,7 +63,8 @@ Aplikasi web marketplace kendaraan multi-role (**Admin, Seller, Buyer**) dengan 
 
 - **State machine escrow**: `escrow_hold → serah_terima → payout_release → selesai`, dengan cabang `dispute → refunded`. Setiap transisi tercatat di `transaction_status_histories` (append-only).
 - **Auto-generated PDF** (dompdf): Commercial Invoice, Sales Purchase Agreement, Deposit Receipt, Tax Invoice (PPN/PPnBM dummy), Bill of Sale, dan Escrow Disbursement Note.
-- **E-signature** buyer/seller melalui canvas signature pad. SPA otomatis dibuat ulang dengan tanda tangan terbaru.
+- **Surat jual beli bertanda tangan elektronik** per dokumen (Pusat Tanda Tangan): Perjanjian Jual Beli 3 pihak dengan badan hukum PT AuraMotors Escrow Indonesia, SPPA asuransi, Surat Pernyataan Keabsahan, Surat Kuasa Balik Nama, BAST, dan Kuitansi bermeterai. Satu tanda tangan bisa dipakai untuk beberapa surat.
+- **Surat bank & asuransi** (PDF): Bukti Pembayaran Bank, Surat Konfirmasi Dana Escrow, Ikhtisar Polis, Rincian Harga, Pajak & Biaya.
 - **Virtual Data Room (VDR)** per transaksi, hanya bisa diakses pihak yang terlibat.
 - **State machine shipment** lintas negara: `draft → logistics_prep → in_transit → customs_clearance → delivered` (plus `delayed`). Ada guard dokumen di tiap tahap: cargo insurance, Export Declaration, B/L atau AWB, Import Declaration, Customs Duty Receipt, Proof of Delivery.
 - **Peta pengiriman dummy** (Leaflet) untuk visualisasi lokasi kendaraan.
@@ -211,8 +214,8 @@ Akun baru tetap bisa dibuat melalui halaman **Register**.
 ### Urutan demo yang disarankan
 
 1. Login `buyer@auramotors.test`, pilih kendaraan di katalog, lalu checkout (DP atau penuh).
-2. Bayar di halaman pembayaran simulasi (isi nomor kartu/OTP bebas). Status menjadi `escrow_hold`.
-3. Buyer dan `seller@auramotors.test` masing-masing tanda tangan SPA dan konfirmasi serah-terima.
+2. Bayar di portal bank simulasi (kartu/PayPal/VA, isi angka & OTP bebas). Status menjadi `escrow_hold`, surat bank & polis terbit.
+3. Buyer dan `seller@auramotors.test` menandatangani surat di **Pusat Tanda Tangan** (SPA, BAST, Surat Kuasa, dll.) lalu konfirmasi serah-terima.
 4. Login `admin@auramotors.test`: approve serah-terima, approve pelepasan dana, lalu cairkan dana ke seller. Status menjadi `selesai`.
 5. Di dashboard admin, review KYC `seller2` dan `buyer2` yang masih pending.
 
@@ -291,8 +294,9 @@ Semua endpoint berada di prefix `/api`. Rute bertanda 🔒 memerlukan sesi Sanct
 | Seller 🔒            | `/seller/kyc`, `/seller/bank-account`, `/seller/vehicles` (CRUD + `submit-for-review`), `/documents`, `/insurance`, `/vin-checks`, `/seller/transactions` (+ `confirm-handover`, `dispute`)                              |
 | Buyer 🔒             | `/buyer/kyc`, `POST /buyer/vehicles/{id}/checkout`, `/buyer/transactions` (+ `refresh-status`, `cancel`, `confirm-handover`, `dispute`)                                                                                  |
 | Admin 🔒             | `/admin/kyc`, `/admin/buyer-kyc`, `/admin/vehicles`, `/admin/transactions` (+ `approve-handover`, `approve-payout`, `disburse`, `mark-completed`, `resolve-dispute`), `/admin/payouts/reconciliation`, transisi shipment |
-| Pembayaran           | 🔒 `/payments/mock/{reference}` (+ `pay`, `fail`), `POST /webhooks/xendit`                                                                                                                                               |
-| Transaksi bersama 🔒 | `POST /transactions/{id}/sign`, `/transactions/{id}/shipment` (+ `update`, `documents`)                                                                                                                                  |
+| Pembayaran           | 🔒 `/payments/mock/{reference}` (+ `pay` dengan detail kartu/PayPal/VA + OTP, `fail`), `POST /webhooks/xendit`                                                                                                           |
+| Rincian harga        | `GET /vehicles/{id}/quote` (publik: DP, asuransi + perluasan, pajak, balik nama, kredit)                                                                                                                                 |
+| Transaksi bersama 🔒 | `POST /transactions/{id}/sign`, `POST /transactions/{id}/document-signatures`, `/transactions/{id}/shipment` (+ `update`, `documents`)                                                                                   |
 | Dokumen privat       | Rute `signed` untuk dokumen KYC, kendaraan, polis, transaksi, dan shipment                                                                                                                                               |
 
 Daftar lengkap: [`backend/routes/api.php`](./backend/routes/api.php) atau `php artisan route:list --path=api`.
@@ -301,12 +305,12 @@ Daftar lengkap: [`backend/routes/api.php`](./backend/routes/api.php) atau `php a
 
 ## Halaman Frontend
 
-| Area   | Rute                                                                                                                             |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| Umum   | `/` (katalog), `/kendaraan/[id]`, `/login`, `/register`, `/lengkapi-data`, `/profil`, `/pesan`, `/chat`                          |
-| Seller | `/seller/kyc`, `/seller/vehicles`, `/seller/vehicles/new`, `/seller/vehicles/[id]/edit`, `/seller/transactions[/id]`             |
-| Buyer  | `/buyer/kyc`, `/checkout/[vehicleId]`, `/checkout/mock/[reference]`, `/buyer/transactions[/id]`, `/buyer/transactions/[id]/nota` |
-| Admin  | `/admin/kyc`, `/admin/buyer-kyc`, `/admin/vehicles`, `/admin/transactions`, `/admin/payouts`                                     |
+| Area   | Rute                                                                                                                           |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Umum   | `/` (katalog), `/kendaraan/[id]`, `/login`, `/register`, `/lengkapi-data`, `/profil`, `/pesan`, `/chat`                        |
+| Seller | `/seller/kyc`, `/seller/vehicles`, `/seller/vehicles/new`, `/seller/vehicles/[id]/edit`, `/seller/transactions[/id]`           |
+| Buyer  | `/buyer/kyc`, `/checkout/[vehicleId]`, `/bank-portal/[reference]`, `/buyer/transactions[/id]`, `/buyer/transactions/[id]/nota` |
+| Admin  | `/admin/kyc`, `/admin/buyer-kyc`, `/admin/vehicles`, `/admin/transactions`, `/admin/payouts`                                   |
 
 ---
 
@@ -324,20 +328,21 @@ Proyek dikerjakan dengan siklus **Scrum**. Dokumentasi detail ada di folder [`do
 | [`06-product-backlog.md`](./docs/06-product-backlog.md)             | Backlog per epic                                         |
 | [`sprint-log.md`](./docs/sprint-log.md)                             | Log planning, daily check, review, dan retro tiap sprint |
 
-| Sprint | Epic                                             | Status                                   |
-| ------ | ------------------------------------------------ | ---------------------------------------- |
-| 0      | Eksplorasi domain, stack, desain                 | ✅                                       |
-| 1      | Auth, role, KYC seller, CRUD listing, gate admin | ✅                                       |
-| 2      | Payment collection (mock + Xendit sandbox)       | ✅                                       |
-| 3      | State machine escrow, approval admin, dispute    | ✅                                       |
-| 4      | Disbursement ke seller + rekonsiliasi            | ✅                                       |
-| 5      | Polish, performa, tema AuraMotors                | ✅                                       |
-| 6      | Extended KYC/AML buyer & seller perusahaan       | ✅                                       |
-| 7 / 7B | Auto-generated PDF, VDR, e-signature             | ✅                                       |
-| 8      | Dokumen kendaraan tambahan, VIN check, asuransi  | ✅ (stretch: NCB belum)                  |
-| 9      | Logistik lintas negara, bea cukai, delivery      | ✅ (stretch: PDF delivery receipt belum) |
+| Sprint | Epic                                                               | Status                                   |
+| ------ | ------------------------------------------------------------------ | ---------------------------------------- |
+| 0      | Eksplorasi domain, stack, desain                                   | ✅                                       |
+| 1      | Auth, role, KYC seller, CRUD listing, gate admin                   | ✅                                       |
+| 2      | Payment collection (mock + Xendit sandbox)                         | ✅                                       |
+| 3      | State machine escrow, approval admin, dispute                      | ✅                                       |
+| 4      | Disbursement ke seller + rekonsiliasi                              | ✅                                       |
+| 5      | Polish, performa, tema AuraMotors                                  | ✅                                       |
+| 6      | Extended KYC/AML buyer & seller perusahaan                         | ✅                                       |
+| 7 / 7B | Auto-generated PDF, VDR, e-signature                               | ✅                                       |
+| 8      | Dokumen kendaraan tambahan, VIN check, asuransi                    | ✅ (stretch: NCB belum)                  |
+| 9      | Logistik lintas negara, bea cukai, delivery                        | ✅ (stretch: PDF delivery receipt belum) |
+| 10     | Asuransi detail, surat bertanda tangan, portal bank, rincian harga | ✅ (kredit sungguhan belum)              |
 
-**Pengembangan berikutnya** (dari catatan revisi dosen): rincian asuransi/kompri/pajak/cicilan yang lebih detail, serta metode pembayaran **kredit**.
+**Pengembangan berikutnya** (dari catatan revisi dosen): metode pembayaran **kredit/leasing** sungguhan (saat ini baru simulasi cicilan di Rincian Harga).
 
 ---
 

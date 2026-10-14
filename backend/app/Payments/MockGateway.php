@@ -11,8 +11,9 @@ use Illuminate\Support\Str;
 /**
  * Simulates an invoice entirely inside the app — no outbound network call.
  * Used as the default driver so the app works in a fully offline classroom
- * demo. The buyer "pays" by visiting the frontend mock-payment page, which
- * calls MockPaymentController to flip the transaction's own status directly.
+ * demo. The buyer "pays" through the frontend bank-portal simulation
+ * (/bank-portal/{reference}: kartu, PayPal, atau VA + OTP), which calls
+ * MockPaymentController to flip the transaction's own status directly.
  */
 class MockGateway implements PaymentGateway
 {
@@ -52,7 +53,7 @@ class MockGateway implements PaymentGateway
 
         $chosen = $preferred ?? ($origins[0] ?? 'http://localhost:3000');
 
-        return rtrim($chosen, '/')."/checkout/mock/{$reference}";
+        return rtrim($chosen, '/')."/bank-portal/{$reference}";
     }
 
     public function fetchStatus(Transaction $transaction): TransactionPaymentStatus

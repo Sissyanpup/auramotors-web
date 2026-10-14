@@ -41,8 +41,7 @@ class XenditWebhookController extends Controller
 
         if ($status === TransactionPaymentStatus::Paid) {
             $escrow->holdFunds($transaction);
-            $docs->generateDepositReceipt($transaction);
-            $docs->generateTaxInvoice($transaction);
+            $docs->generatePaidDocuments($transaction);
         }
 
         return response()->noContent();

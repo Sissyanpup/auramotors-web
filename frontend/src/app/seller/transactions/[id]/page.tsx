@@ -11,7 +11,8 @@ import TransactionStatusHistory from "@/components/TransactionStatusHistory";
 import VdrPanel from "@/components/VdrPanel";
 import ShipmentPanel from "@/components/ShipmentPanel";
 import ShipmentInitForm from "@/components/ShipmentInitForm";
-import SignaturePad from "@/components/SignaturePad";
+import SigningCenter from "@/components/SigningCenter";
+import PriceBreakdownPanel from "@/components/PriceBreakdownPanel";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
 
 export default function SellerTransactionDetailPage({
@@ -27,26 +28,6 @@ export default function SellerTransactionDetailPage({
   const [disputeReason, setDisputeReason] = useState("");
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [showConfirmHandover, setShowConfirmHandover] = useState(false);
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
-  const [isSigning, setIsSigning] = useState(false);
-  const [signatureError, setSignatureError] = useState<string | null>(null);
-
-  async function handleSubmitSignature(dataUrl: string) {
-    setIsSigning(true);
-    setSignatureError(null);
-    try {
-      const { data } = await apiFetch<{ data: Transaction }>(
-        `/api/transactions/${id}/sign`,
-        { method: "POST", body: { signature: dataUrl } }
-      );
-      setTransaction(data);
-      setShowSignaturePad(false);
-    } catch (err) {
-      if (err instanceof ApiError) setSignatureError(err.message);
-    } finally {
-      setIsSigning(false);
-    }
-  }
 
   async function loadTransaction() {
     try {
@@ -225,6 +206,27 @@ export default function SellerTransactionDetailPage({
         )}
       </div>
 
+      {transaction.signing_checklist && transaction.signing_checklist.length > 0 && (
+        <div className="mt-6">
+          <SigningCenter
+            transactionId={transaction.id}
+            checklist={transaction.signing_checklist}
+            role="seller"
+            onSigned={setTransaction}
+          />
+        </div>
+      )}
+
+      {transaction.price_breakdown && (
+        <div className="mt-6">
+          <PriceBreakdownPanel
+            breakdown={transaction.price_breakdown}
+            perspective="seller"
+            intro="Dari harga jual sampai dana bersih yang masuk ke rekening Anda — termasuk potongan biaya layanan escrow dan premi asuransi yang bukan hak penjual."
+          />
+        </div>
+      )}
+
       <div className="mt-6">
         <VdrPanel documents={transaction.documents} />
       </div>
@@ -241,62 +243,6 @@ export default function SellerTransactionDetailPage({
           <ShipmentInitForm transactionId={transaction.id} onUpdate={loadTransaction} />
         )}
       </div>
-
-      <div className="mt-6 rounded-lg border border-border bg-surface-container p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-display text-lg text-on-surface">Tanda Tangan Digital</h2>
-            <p className="mt-0.5 text-xs text-on-surface-muted">
-              Tanda tangani perjanjian (SPA) & bukti pemindahan hak (Bill of Sale) secara digital.
-            </p>
-          </div>
-          {transaction.seller_signed_at ? (
-            <span className="rounded-md border border-success/40 bg-success/5 px-3 py-1 text-xs text-success">
-              &#10003; Sudah ditandatangani
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowSignaturePad(true)}
-              className="btn-gold rounded-md px-4 py-2 text-sm"
-            >
-              Tanda Tangan Sekarang
-            </button>
-          )}
-        </div>
-        <dl className="mt-4 grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <dt className="text-on-surface-muted">Penjual</dt>
-            <dd className="mt-0.5 text-on-surface">
-              {transaction.seller_signed_at
-                ? `Ditandatangani ${new Date(transaction.seller_signed_at).toLocaleString("id-ID")}`
-                : "Belum ditandatangani"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-on-surface-muted">Pembeli</dt>
-            <dd className="mt-0.5 text-on-surface">
-              {transaction.buyer_signed_at
-                ? `Ditandatangani ${new Date(transaction.buyer_signed_at).toLocaleString("id-ID")}`
-                : "Belum ditandatangani"}
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      {showSignaturePad && (
-        <SignaturePad
-          onSubmit={handleSubmitSignature}
-          onClose={() => {
-            setShowSignaturePad(false);
-            setSignatureError(null);
-          }}
-          isSubmitting={isSigning}
-          errorMessage={signatureError}
-          title="Tanda Tangan sebagai Penjual"
-          intro="Gambar tanda tangan Anda pada kotak di bawah. Tanda tangan hanya bisa disimpan sekali dan tidak dapat diubah."
-        />
-      )}
 
       {transaction.status_history && transaction.status_history.length > 0 && (
         <div className="mt-6">

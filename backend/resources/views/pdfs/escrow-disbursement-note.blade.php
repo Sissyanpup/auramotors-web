@@ -47,12 +47,18 @@
                 <td>Nilai transaksi (dana masuk escrow)</td>
                 <td class="num">Rp {{ number_format((float) $t->amount, 0, ',', '.') }}</td>
             </tr>
+            @if((float) $t->insurance_premium > 0)
+                <tr>
+                    <td>Premi asuransi (diteruskan ke {{ $legal['insurer']['name'] }}, bukan hak seller)</td>
+                    <td class="num">&minus; Rp {{ number_format((float) $t->insurance_premium, 0, ',', '.') }}</td>
+                </tr>
+            @endif
             @if($payout)
                 <tr>
                     <td>
                         Komisi platform
                         <span style="color:#666; font-size:10px;">
-                            ({{ rtrim(rtrim((string) $payout->commission_rate, '0'), '.') }}%)
+                            ({{ rtrim(rtrim(number_format((float) $payout->commission_rate * 100, 2, '.', ''), '0'), '.') }}%)
                         </span>
                     </td>
                     <td class="num">&minus; Rp {{ number_format((float) $payout->commission_amount, 0, ',', '.') }}</td>
@@ -82,7 +88,7 @@
         @else
             <tr class="grand">
                 <td class="label">Dana Diterima Seller (estimasi)</td>
-                <td class="value">Rp {{ number_format((float) $t->amount, 0, ',', '.') }}</td>
+                <td class="value">Rp {{ number_format((float) $t->amount - (float) $t->insurance_premium, 0, ',', '.') }}</td>
             </tr>
         @endif
     </table>

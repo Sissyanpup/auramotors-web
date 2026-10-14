@@ -37,7 +37,8 @@ return [
     ],
 
     'escrow_bank' => [
-        'bank' => env('ESCROW_BANK_NAME', 'BCA'),
+        // Bank kustodian fiktif — sama dengan penerbit surat bank di config/legal.php.
+        'bank' => env('ESCROW_BANK_NAME', 'Bank Aura Nusantara'),
         'account_number' => env('ESCROW_BANK_ACCOUNT', '1234567890'),
         'account_holder' => env('ESCROW_BANK_HOLDER', 'PT AURAMOTORS ESCROW INDONESIA'),
     ],

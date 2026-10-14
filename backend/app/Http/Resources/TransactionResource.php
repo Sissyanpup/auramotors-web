@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Documents\DocumentSigning;
 use App\Models\Transaction;
+use App\Support\PriceBreakdownCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -35,6 +37,8 @@ class TransactionResource extends JsonResource
             'dp_percent' => $this->dp_percent,
             'insurance_type' => $this->insurance_type,
             'insurance_premium' => $this->insurance_premium,
+            'insurance_addons' => $this->insurance_addons ?? [],
+            'insurance_policy_number' => $this->insurance_policy_number,
             'buyer_address' => $this->buyer_address,
             'buyer_phone' => $this->buyer_phone,
             'buyer_notes' => $this->buyer_notes,
@@ -44,6 +48,11 @@ class TransactionResource extends JsonResource
             'bank_transfer_account_holder' => $this->bank_transfer_account_holder,
             'payment_gateway' => $this->payment_gateway,
             'payment_status' => $this->payment_status,
+            'payment_method' => $this->payment_method,
+            'payment_channel' => $this->payment_channel,
+            'payment_account_masked' => $this->payment_account_masked,
+            'payment_payer_name' => $this->payment_payer_name,
+            'payment_approval_code' => $this->payment_approval_code,
             'gateway_reference' => $this->gateway_reference,
             'gateway_invoice_url' => $this->gateway_invoice_url,
             'paid_at' => $this->paid_at,
@@ -63,6 +72,9 @@ class TransactionResource extends JsonResource
             'status_history' => $this->whenLoaded('statusHistories', fn () => TransactionStatusHistoryResource::collection($this->statusHistories)),
             'payouts' => $this->whenLoaded('payouts', fn () => TransactionPayoutResource::collection($this->payouts)),
             'documents' => $this->whenLoaded('documents', fn () => TransactionDocumentResource::collection($this->documents)),
+            // Rincian harga & checklist tanda tangan hanya untuk endpoint detail (yang memuat documents).
+            'price_breakdown' => $this->whenLoaded('documents', fn () => app(PriceBreakdownCalculator::class)->forTransaction($this->resource)),
+            'signing_checklist' => $this->whenLoaded('documents', fn () => app(DocumentSigning::class)->checklist($this->resource)),
             'shipment' => $this->whenLoaded('shipment', fn () => $this->shipment ? new ShipmentResource($this->shipment) : null),
             'created_at' => $this->created_at,
         ];

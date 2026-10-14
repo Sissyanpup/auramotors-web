@@ -8,12 +8,14 @@ import { formatRupiah } from "@/lib/format";
 import { useAuth } from "@/contexts/auth-context";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
 import Badge from "@/components/Badge";
-import type { InsuranceOption, InsuranceKind, PaymentOption, PaymentScheme, Transaction, VehicleDetail } from "@/lib/types";
+import PriceBreakdownPanel from "@/components/PriceBreakdownPanel";
+import type { InsuranceOption, InsuranceKind, PaymentOption, PaymentScheme, PriceQuote, Transaction, VehicleDetail } from "@/lib/types";
 
 type FormState = {
   scheme: PaymentScheme;
   percent: number;
   insuranceType: InsuranceKind;
+  insuranceAddons: string[];
   address: string;
   phone: string;
   notes: string;
@@ -23,6 +25,7 @@ const INITIAL_FORM: FormState = {
   scheme: "down_payment",
   percent: 10,
   insuranceType: "none",
+  insuranceAddons: [],
   address: "",
   phone: "",
   notes: "",
@@ -40,6 +43,8 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [quote, setQuote] = useState<PriceQuote | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -58,6 +63,32 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
     };
   }, [vehicleId]);
 
+  // Rincian harga diambil dari backend (kalkulator yang sama dengan saat checkout),
+  // jadi angka pratinjau = angka yang akan ditagih & tercetak di kontrak.
+  useEffect(() => {
+    if (!vehicle) return;
+    let cancelled = false;
+    const query = new URLSearchParams({
+      payment_scheme: form.scheme,
+      dp_percent: String(form.percent),
+      insurance_type: form.insuranceType,
+    });
+    form.insuranceAddons.forEach((code) => query.append("insurance_addons[]", code));
+
+    apiFetch<{ data: PriceQuote }>(`/api/vehicles/${vehicle.id}/quote?${query.toString()}`)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setQuote(data);
+        setQuoteError(null);
+      })
+      .catch((err) => {
+        if (!cancelled) setQuoteError(err instanceof ApiError ? err.message : "Gagal menghitung rincian harga.");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [vehicle, form.scheme, form.percent, form.insuranceType, form.insuranceAddons]);
+
   useEffect(() => {
     if (!authLoading && !user) router.replace("/login");
     if (!authLoading && user && user.role !== "buyer") router.replace("/");
@@ -75,8 +106,18 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
   const price = vehicle ? Number(vehicle.price) : 0;
   const isFullPayment = form.scheme === "full";
   const dpAmount = isFullPayment ? price : Math.round((price * form.percent) / 100);
-  const insurancePremium = selectedInsurance?.premium ?? 0;
-  const totalDueNow = dpAmount + insurancePremium;
+  const insurancePremium = quote?.breakdown.insurance.total ?? selectedInsurance?.premium ?? 0;
+  const totalDueNow = quote?.breakdown.due_now.total ?? dpAmount + insurancePremium;
+  const availableAddons = form.insuranceType === "none" ? [] : quote?.available_addons ?? [];
+
+  function toggleAddon(code: string) {
+    setForm((prev) => ({
+      ...prev,
+      insuranceAddons: prev.insuranceAddons.includes(code)
+        ? prev.insuranceAddons.filter((c) => c !== code)
+        : [...prev.insuranceAddons, code],
+    }));
+  }
   const remainingAfterDp = Math.max(price - dpAmount, 0);
 
   function selectScheme(percent: number) {
@@ -112,6 +153,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
           payment_scheme: form.scheme,
           dp_percent: form.percent,
           insurance_type: form.insuranceType,
+          insurance_addons: form.insuranceAddons,
           buyer_address: form.address.trim(),
           buyer_phone: form.phone.trim(),
           buyer_notes: form.notes.trim() || null,
@@ -151,7 +193,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
         </p>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr,320px]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Data buyer (readonly dari KTP) */}
           <section className="rounded-lg border border-border bg-surface-container p-5">
@@ -226,7 +268,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                         name="insurance"
                         value={opt.type}
                         checked={active}
-                        onChange={() => setForm((prev) => ({ ...prev, insuranceType: opt.type }))}
+                        onChange={() => setForm((prev) => ({ ...prev, insuranceType: opt.type, insuranceAddons: [] }))}
                         className="h-4 w-4 text-primary focus:ring-primary"
                       />
                       <div>
@@ -246,6 +288,49 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                 );
               })}
             </div>
+
+            {availableAddons.length > 0 && (
+              <div className="mt-5 border-t border-border pt-4">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-on-surface-muted">
+                  Perluasan jaminan <span className="font-normal normal-case">(opsional)</span>
+                </h3>
+                <p className="mt-1 text-xs text-on-surface-muted">
+                  Polis dasar tidak menanggung bencana alam, huru-hara, atau tanggung jawab ke pihak lain. Tambahkan sesuai kebutuhan.
+                </p>
+                <div className="mt-3 space-y-2">
+                  {availableAddons.map((addon) => {
+                    const checked = form.insuranceAddons.includes(addon.code);
+                    return (
+                      <label
+                        key={addon.code}
+                        className={`flex cursor-pointer items-start justify-between gap-3 rounded-md border p-3 transition-colors ${
+                          checked ? "border-primary bg-primary/10" : "border-border bg-surface hover:border-primary/40"
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleAddon(addon.code)}
+                            className="mt-0.5 h-4 w-4 accent-[var(--color-primary)]"
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-on-surface">{addon.label}</p>
+                            <p className="text-xs text-on-surface-muted">{addon.description}</p>
+                            <p className="mt-0.5 text-[11px] text-on-surface-muted">{addon.basis}</p>
+                          </div>
+                        </div>
+                        <p className="whitespace-nowrap text-sm font-semibold text-on-surface">+ {formatRupiah(addon.premium)}</p>
+                      </label>
+                    );
+                  })}
+                </div>
+                <ul className="mt-3 list-disc space-y-0.5 pl-5 text-[11px] text-on-surface-muted">
+                  <li>Asuransi menolak klaim bila mobil dipakai taksi online/rental atau dikemudikan tanpa SIM sah.</li>
+                  <li>Riwayat klaim &amp; data GPS kendaraan diperiksa saat klaim — isi SPPA dengan jujur.</li>
+                </ul>
+              </div>
+            )}
           </section>
 
           {/* Alamat pengantaran */}
@@ -335,7 +420,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
               </div>
               {insurancePremium > 0 && (
                 <div className="flex items-center justify-between">
-                  <dt className="text-on-surface-muted">Premi asuransi</dt>
+                  <dt className="text-on-surface-muted">Premi &amp; polis asuransi</dt>
                   <dd className="text-on-surface">{formatRupiah(insurancePremium)}</dd>
                 </div>
               )}
@@ -354,9 +439,20 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
             <div className="mt-4 rounded-md border border-border bg-surface p-3 text-xs text-on-surface-muted">
               Dana ditahan di rekening escrow platform sampai kamu mengkonfirmasi terima kendaraan.
             </div>
+            {quoteError && <p className="mt-3 text-xs text-error">{quoteError}</p>}
           </div>
         </aside>
       </div>
+
+      {quote && (
+        <div className="mt-6">
+          <PriceBreakdownPanel
+            breakdown={quote.breakdown}
+            perspective="buyer"
+            intro="Pratinjau lampiran kontrak: dari mana setiap angka berasal — pajak dalam harga, premi asuransi, biaya balik nama, sampai simulasi cicilan."
+          />
+        </div>
+      )}
 
       {showConfirm && (
         <DangerConfirmModal
@@ -370,6 +466,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
           consequences={[
             `Total ${formatRupiah(totalDueNow)} akan ditagihkan (${isFullPayment ? "bayar penuh" : `DP ${form.percent}%`}${insurancePremium > 0 ? " + premi asuransi" : ""}).`,
             "Nomor invoice resmi diterbitkan otomatis dan tidak dapat diubah.",
+            `Dokumen terbit: Commercial Invoice, Perjanjian Jual Beli (3 pihak), Rincian Harga & Biaya${form.insuranceType !== "none" ? ", dan SPPA asuransi" : ""}.`,
             "Data KTP, alamat, dan nomor telepon akan tercantum pada nota transaksi.",
             !isFullPayment ? `Sisa pelunasan ${formatRupiah(remainingAfterDp)} diselesaikan di luar sistem antara kamu dan seller.` : "Transaksi ini bersifat lunas.",
           ]}

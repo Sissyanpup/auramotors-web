@@ -399,3 +399,31 @@
 - Baik: keputusan awal untuk **tidak refactor state machine escrow** terbukti tepat — shipment domain paralel bisa dibangun tanpa menyentuh flow existing yang stabil, 0 regresi di 105+ test lain. Reuse `SignedDocumentUrl` (Sprint 8 fix) + `FileUpload`/`ConfirmModal` (Sprint 6-7) + pattern service + Blade template + resource sudah matang: 9 test baru + full frontend hanya butuh effort yang setara satu sub-sprint. Guard uploader role di controller (seller-only untuk ekspor, buyer-only untuk PoD, admin override untuk semua) memberi audit yang jelas siapa yang meng-upload apa lewat kolom `uploaded_by` — bukan generic "someone uploaded".
 - Perlu diperbaiki: bug `$shipment->fresh()` yang perlu ditambah setelah `create()` untuk memicu enum cast di response — sama dengan pola bug Sprint 3 (whenLoaded actor null) dan Sprint 5 (cache unserialize) di mana in-memory model beda perilaku dari fresh-from-DB. Perlu catatan: untuk model dengan cast custom (enum, JSON, dsb) yang diserialize langsung setelah `Model::create()`, pertimbangkan `->fresh()` supaya cast pipeline berjalan dari DB path, bukan cache attribute path. **Full test suite crash**: `Fatal error: Premature end of PHP process` di sequence tertentu dompdf-heavy tests. Bukan bug logic, tapi indikasi memory akumulasi dari dompdf lifecycle di satu PHP process. Tidak diprioritaskan sekarang (tidak blocking demo/grading, dan semua modul individu tetap lulus). Kalau harus fix: split tests ke process groups, atau reset dompdf singleton setelah tiap test.
 - Aksi ke depan (di luar 9 sprint yang terjadwal): (1) tambah Transport & Delivery Receipt PDF kalau ada waktu — 1 generator + 1 template mengikuti pola Epic 7; (2) investigasi full-suite crash memori kalau CI/CD nanti dibangun; (3) sisa stretch goals Epic 8 (NCB/Claim History) kalau demand muncul. Untuk sekarang, **9 epic selesai** — proyek sudah punya seluruh dokumen standar internasional (KYC extended, auto-generated PDFs 6 tipe, e-signature, vehicle extended docs + insurance + VIN check, cross-border logistics 8 tipe dokumen + cargo insurance) sesuai requirement awal.
+
+---
+
+## Sprint 10 — Asuransi, Surat Bertanda Tangan, Portal Bank & Rincian Harga (Epic 10)
+
+- Tanggal mulai: 2026-10-09
+- Tanggal selesai: 2026-10-09
+
+**Sprint Planning**
+
+- Item backlog: Epic 10 di `docs/06-product-backlog.md`, dari catatan dosen 25 Sept & 2 Okt (breakdown asuransi/pajak/cicilan sedetail mungkin, form pembayaran bank tiruan dengan OTP dummy, nota/surat resmi).
+- Definition of Done: satu sumber perhitungan harga untuk checkout, API, dan PDF; setiap surat punya PDF; surat yang perlu tanda tangan tidak bisa diteken sebelum PDF-nya terbit atau oleh pihak yang salah; portal bank menerima angka acak; test PHPUnit + `next build` lolos.
+
+**Selama Sprint (Daily Progress Check)**
+
+- 2026-10-09: Backend — migration kolom `price_breakdown`, `insurance_addons`, `insurance_policy_number`, detail metode bayar, tabel `transaction_document_signatures`, dan `transaction_documents.type` diubah dari enum ke string (menjalankan saran retro Sprint 8). `DocumentGenerator` direfaktor ke `generate($t, $type)` + bundel `generateCheckoutDocuments()` / `generatePaidDocuments()` (dipakai mock, refresh-status Xendit, dan webhook). 9 template PDF baru + SPA ditulis ulang sebagai kontrak 3 pihak.
+- 2026-10-09: Frontend — `PriceBreakdownPanel`, `SigningCenter`, halaman `/bank-portal/[reference]`, checkout dengan perluasan asuransi + pratinjau dari endpoint `GET /api/vehicles/{id}/quote`. Rute lama `/checkout/mock/[reference]` redirect ke portal.
+- 2026-10-09: 18 test baru (quote, validasi rider, snapshot checkout, pembayaran kartu/PayPal, OTP, tanda tangan batch & guard, payout tanpa premi, terbilang). Full suite: 142 test, 136 lolos; 6 gagal sama persis dengan sebelum sprint (test lama `CheckoutTest`/`AuthenticationTest`/`XenditIntegrationTest` yang belum mengikuti API & factory KTP terbaru). Crash memori dompdf full-suite (catatan Sprint 9) diatasi dengan `memory_limit=512M` di `phpunit.xml`; per request tetap ±65MB.
+
+**Sprint Review (Demo)**
+
+- Berhasil: alur buyer checkout All Risk + rider → portal bank putih (kartu VISA, OTP acak) → sukses dengan kode otorisasi → 13 dokumen di VDR (folder Legal/Keuangan/Bank/Asuransi) → buyer menandatangani 4 surat sekaligus, tanda tangan tercetak di PDF.
+- Belum selesai / dipindah: metode bayar kredit sungguhan; gate BAST sebelum approval admin.
+
+**Retrospective**
+
+- Baik: snapshot rincian harga membuat kontrak tidak berubah walau tarif di config diubah; pratinjau checkout memanggil kalkulator backend yang sama sehingga tidak ada duplikasi rumus di frontend.
+- Perlu diperbaiki: `npm run lint` gagal karena `eslint-config-next@14` tidak cocok dengan flat config ESLint 9 (pre-existing); 6 test lama perlu diperbarui.

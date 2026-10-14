@@ -18,8 +18,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'vehicle_id', 'buyer_id', 'seller_id', 'amount', 'payment_gateway', 'payment_status',
+    'payment_method', 'payment_channel', 'payment_account_masked', 'payment_payer_name', 'payment_approval_code',
     'payment_scheme', 'dp_percent', 'vehicle_price',
-    'insurance_type', 'insurance_premium',
+    'insurance_type', 'insurance_premium', 'insurance_addons', 'insurance_policy_number', 'price_breakdown',
     'buyer_address', 'buyer_phone', 'buyer_notes',
     'invoice_number',
     'bank_transfer_bank', 'bank_transfer_account_number', 'bank_transfer_account_holder',
@@ -53,6 +54,14 @@ class Transaction extends Model
         'dispute_resolved_by' => null,
         'dispute_resolved_at' => null,
         'payout_status' => null,
+        'price_breakdown' => null,
+        'insurance_addons' => null,
+        'insurance_policy_number' => null,
+        'payment_method' => null,
+        'payment_channel' => null,
+        'payment_account_masked' => null,
+        'payment_payer_name' => null,
+        'payment_approval_code' => null,
     ];
 
     protected function casts(): array
@@ -62,6 +71,8 @@ class Transaction extends Model
             'vehicle_price' => 'decimal:2',
             'dp_percent' => 'decimal:2',
             'insurance_premium' => 'decimal:2',
+            'insurance_addons' => 'array',
+            'price_breakdown' => 'array',
             'payment_gateway' => PaymentGatewayDriver::class,
             'payment_status' => TransactionPaymentStatus::class,
             'payment_scheme' => PaymentScheme::class,
@@ -118,6 +129,11 @@ class Transaction extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(TransactionDocument::class)->latest('generated_at');
+    }
+
+    public function documentSignatures(): HasMany
+    {
+        return $this->hasMany(TransactionDocumentSignature::class);
     }
 
     public function shipment(): HasOne

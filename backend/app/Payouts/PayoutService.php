@@ -27,9 +27,12 @@ class PayoutService
         abort_if($transaction->payout_status === TransactionPayoutStatus::Paid, 409, 'Dana transaksi ini sudah dicairkan ke penjual.');
 
         return DB::transaction(function () use ($transaction, $admin, $reference, $note) {
+            // Premi asuransi ikut dibayar buyer ke escrow tapi milik perusahaan asuransi,
+            // bukan penjual — jadi dikeluarkan dari basis komisi & payout.
             $rate = (float) config('payout.commission_rate');
-            $commissionAmount = round((float) $transaction->amount * $rate, 2);
-            $payoutAmount = round((float) $transaction->amount - $commissionAmount, 2);
+            $vehiclePortion = (float) $transaction->amount - (float) ($transaction->insurance_premium ?? 0);
+            $commissionAmount = round($vehiclePortion * $rate, 2);
+            $payoutAmount = round($vehiclePortion - $commissionAmount, 2);
 
             $payout = TransactionPayout::create([
                 'transaction_id' => $transaction->id,

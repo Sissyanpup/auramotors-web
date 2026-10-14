@@ -11,7 +11,8 @@ import TransactionStatusHistory from "@/components/TransactionStatusHistory";
 import VdrPanel from "@/components/VdrPanel";
 import ShipmentPanel from "@/components/ShipmentPanel";
 import ShipmentInitForm from "@/components/ShipmentInitForm";
-import SignaturePad from "@/components/SignaturePad";
+import SigningCenter from "@/components/SigningCenter";
+import PriceBreakdownPanel from "@/components/PriceBreakdownPanel";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
 import DeliveryTracker from "@/components/DeliveryTracker";
 import WarrantyClaimModal from "@/components/WarrantyClaimModal";
@@ -32,9 +33,6 @@ export default function BuyerTransactionDetailPage({
   const [showConfirmHandover, setShowConfirmHandover] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
-  const [showSignaturePad, setShowSignaturePad] = useState(false);
-  const [isSigning, setIsSigning] = useState(false);
-  const [signatureError, setSignatureError] = useState<string | null>(null);
   // Progress pengantaran GPS (0-1). Default 1 supaya kalau tracker belum
   // aktif (mis. transaksi belum masuk fase escrow_hold), tombol tidak
   // ke-block. Tracker akan meng-emit 0 → 1 selama DELIVERY_SECONDS berjalan.
@@ -71,23 +69,6 @@ export default function BuyerTransactionDetailPage({
       if (err instanceof ApiError) setError(err.message);
     } finally {
       setIsRefreshing(false);
-    }
-  }
-
-  async function handleSubmitSignature(dataUrl: string) {
-    setIsSigning(true);
-    setSignatureError(null);
-    try {
-      const { data } = await apiFetch<{ data: Transaction }>(
-        `/api/transactions/${id}/sign`,
-        { method: "POST", body: { signature: dataUrl } }
-      );
-      setTransaction(data);
-      setShowSignaturePad(false);
-    } catch (err) {
-      if (err instanceof ApiError) setSignatureError(err.message);
-    } finally {
-      setIsSigning(false);
     }
   }
 
@@ -225,8 +206,24 @@ export default function BuyerTransactionDetailPage({
           </div>
           <div>
             <dt className="text-xs uppercase text-on-surface-muted">Metode Pembayaran</dt>
-            <dd className="text-on-surface">{transaction.payment_gateway === "mock" ? "Simulasi (Offline)" : "Xendit"}</dd>
+            <dd className="text-on-surface">
+              {transaction.payment_channel
+                ? `${transaction.payment_channel}${transaction.payment_account_masked ? ` · ${transaction.payment_account_masked}` : ""}`
+                : transaction.payment_gateway === "mock" ? "Portal Bank Simulasi (Offline)" : "Xendit"}
+            </dd>
           </div>
+          {transaction.payment_approval_code && (
+            <div>
+              <dt className="text-xs uppercase text-on-surface-muted">Kode Otorisasi Bank</dt>
+              <dd className="font-mono text-on-surface">{transaction.payment_approval_code}</dd>
+            </div>
+          )}
+          {transaction.insurance_policy_number && (
+            <div>
+              <dt className="text-xs uppercase text-on-surface-muted">No. Polis Asuransi</dt>
+              <dd className="font-mono text-on-surface">{transaction.insurance_policy_number}</dd>
+            </div>
+          )}
           <div>
             <dt className="text-xs uppercase text-on-surface-muted">Dibuat</dt>
             <dd className="text-on-surface">{formatDate(transaction.created_at)}</dd>
@@ -260,7 +257,7 @@ export default function BuyerTransactionDetailPage({
                 href={transaction.gateway_invoice_url}
                 className="rounded-md bg-primary-container px-4 py-2 text-sm font-medium text-on-primary hover:bg-primary"
               >
-                Lanjutkan Pembayaran
+                Bayar di Portal Bank
               </a>
             )}
             <button
@@ -475,6 +472,23 @@ export default function BuyerTransactionDetailPage({
         </div>
       )}
 
+      {transaction.signing_checklist && transaction.signing_checklist.length > 0 && (
+        <div className="mt-6">
+          <SigningCenter
+            transactionId={transaction.id}
+            checklist={transaction.signing_checklist}
+            role="buyer"
+            onSigned={setTransaction}
+          />
+        </div>
+      )}
+
+      {transaction.price_breakdown && (
+        <div className="mt-6">
+          <PriceBreakdownPanel breakdown={transaction.price_breakdown} perspective="buyer" />
+        </div>
+      )}
+
       <div className="mt-6">
         <VdrPanel documents={transaction.documents} />
       </div>
@@ -491,63 +505,6 @@ export default function BuyerTransactionDetailPage({
           <ShipmentInitForm transactionId={transaction.id} onUpdate={loadTransaction} />
         )}
       </div>
-
-      <div className="mt-6 rounded-lg border border-border bg-surface-container p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h2 className="font-display text-lg text-on-surface">Tanda Tangan Digital</h2>
-            <p className="mt-0.5 text-xs text-on-surface-muted">
-              Tanda tangani perjanjian (SPA) & bukti pemindahan hak (Bill of Sale) secara digital.
-              Tanda tangan Anda akan muncul otomatis di PDF setelah disimpan.
-            </p>
-          </div>
-          {transaction.buyer_signed_at ? (
-            <span className="rounded-md border border-success/40 bg-success/5 px-3 py-1 text-xs text-success">
-              &#10003; Sudah ditandatangani
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setShowSignaturePad(true)}
-              className="btn-gold rounded-md px-4 py-2 text-sm"
-            >
-              Tanda Tangan Sekarang
-            </button>
-          )}
-        </div>
-        <dl className="mt-4 grid grid-cols-2 gap-4 text-xs">
-          <div>
-            <dt className="text-on-surface-muted">Pembeli</dt>
-            <dd className="mt-0.5 text-on-surface">
-              {transaction.buyer_signed_at
-                ? `Ditandatangani ${new Date(transaction.buyer_signed_at).toLocaleString("id-ID")}`
-                : "Belum ditandatangani"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-on-surface-muted">Penjual</dt>
-            <dd className="mt-0.5 text-on-surface">
-              {transaction.seller_signed_at
-                ? `Ditandatangani ${new Date(transaction.seller_signed_at).toLocaleString("id-ID")}`
-                : "Belum ditandatangani"}
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      {showSignaturePad && (
-        <SignaturePad
-          onSubmit={handleSubmitSignature}
-          onClose={() => {
-            setShowSignaturePad(false);
-            setSignatureError(null);
-          }}
-          isSubmitting={isSigning}
-          errorMessage={signatureError}
-          title="Tanda Tangan sebagai Pembeli"
-          intro="Gambar tanda tangan Anda pada kotak di bawah. Tanda tangan hanya bisa disimpan sekali dan tidak dapat diubah."
-        />
-      )}
 
       {transaction.status_history && transaction.status_history.length > 0 && (
         <div className="mt-6">

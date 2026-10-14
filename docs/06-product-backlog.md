@@ -80,6 +80,17 @@
 - [x] Delivery (buyer-only upload): Proof of Delivery (PoD) + Letter of Acceptance. Guard `markDelivered` menolak tanpa keduanya.
 - [ ] Transport & Delivery Receipt auto-generated (Epic 7 style PDF). _(Stretch goal — tidak diprioritaskan Sprint 9; arsitektur `DocumentGenerator` sudah siap kalau perlu ditambah.)_
 
+### Epic 10 — Asuransi Detail, Surat Jual Beli Bertanda Tangan, Portal Bank & Rincian Harga
+
+- [x] Kalkulator rincian harga tunggal (`App\Support\PriceBreakdownCalculator`, tarif di `config/pricing.php`): komposisi DPP/PPN/PPnBM dalam harga, tagihan DP + asuransi, estimasi biaya balik nama Samsat (BBN-KB, PKB, SWDKLLJ, PNBP STNK/TNKB/BPKB), hak bersih penjual, total biaya kepemilikan, simulasi kredit 12–60 bulan. Di-snapshot ke `transactions.price_breakdown` saat checkout.
+- [x] Asuransi detail: perluasan jaminan (banjir, gempa, huru-hara, terorisme, TJH pihak ketiga, PA, derek + bengkel + mobil pengganti khusus All Risk), biaya polis & meterai, risiko sendiri, ambang total loss 75%, ganti rugi kehilangan 80%, pengecualian (taksi online/rental, tanpa SIM sah). Nomor polis terbit setelah premi dibayar.
+- [x] Surat yang ditandatangani buyer/seller per dokumen (`transaction_document_signatures`): SPA 3 pihak (penjual, pembeli, badan hukum PT AuraMotors Escrow Indonesia), SPPA, Surat Pernyataan Keabsahan Kendaraan, Surat Kuasa Balik Nama, BAST, Kuitansi bermeterai. Tanda tangan sekali untuk banyak dokumen.
+- [x] Surat bank: Bukti Pembayaran (Payment Advice) & Surat Konfirmasi Penempatan Dana Escrow, berkop bank kustodian fiktif.
+- [x] Portal bank simulasi `/bank-portal/[reference]` (tema putih, terpisah dari tema AuraMotors): kartu kredit/debit + 3-D Secure, PayPal, Virtual Account/internet banking, OTP 6 digit apa saja, jeda proses realistis. Nomor kartu & CVV tidak disimpan.
+- [x] Premi asuransi dikeluarkan dari basis komisi & payout seller (diteruskan ke asuradur).
+- [ ] Metode bayar **kredit/leasing** sungguhan (pengajuan, approval bank, angsuran). _(Saat ini baru simulasi cicilan di Rincian Harga — dibahas dulu sesuai catatan dosen.)_
+- [ ] Gate approval serah-terima admin menunggu BAST ditandatangani kedua pihak. _(Saat ini hanya ditampilkan sebagai checklist ke admin.)_
+
 ## Prioritas & Dependensi
 
 ```

@@ -2,57 +2,56 @@
 
 namespace App\Http\Controllers;
 
-use App\Documents\DocumentGenerator;
+use App\Documents\DocumentSigning;
+use App\Enums\TransactionDocumentType;
+use App\Http\Requests\DocumentSignatureRequest;
 use App\Http\Requests\SignatureRequest;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class SignatureController extends Controller
 {
     /**
-     * Menerima tanda tangan digital dari buyer atau seller sebagai PNG data URL
-     * dari canvas signature pad frontend. Menyimpan ke disk `local`, mencatat
-     * path + waktu di transaction, lalu meregenerasi SPA & Bill of Sale supaya
-     * tanda tangan yang baru masuk ke PDF.
+     * Endpoint lama (Epic 7B): menandatangani SPA saja. Dipertahankan untuk
+     * kompatibilitas — sekarang diteruskan ke DocumentSigning yang sama.
      */
-    public function store(SignatureRequest $request, Transaction $transaction, DocumentGenerator $docs): TransactionResource
+    public function store(SignatureRequest $request, Transaction $transaction, DocumentSigning $signing): TransactionResource
     {
         $this->authorize('view', $transaction);
 
-        $user = $request->user();
-        $isBuyer = $user->id === $transaction->buyer_id;
-        $isSeller = $user->id === $transaction->seller_id;
+        $signing->sign(
+            $transaction,
+            $request->user(),
+            [TransactionDocumentType::SalesPurchaseAgreement],
+            $request->binaryPng(),
+            $request->ip(),
+        );
 
-        abort_unless($isBuyer || $isSeller, 403, 'Hanya buyer atau seller transaksi yang bisa menandatangani.');
+        return $this->respond($transaction);
+    }
 
-        // Idempotency: kalau sudah pernah tanda tangan, tolak resign supaya bukti tidak bisa ditukar.
-        if ($isBuyer && $transaction->buyer_signed_at !== null) {
-            abort(409, 'Anda sudah pernah menandatangani transaksi ini.');
-        }
-        if ($isSeller && $transaction->seller_signed_at !== null) {
-            abort(409, 'Anda sudah pernah menandatangani transaksi ini.');
-        }
+    /**
+     * Menandatangani satu atau beberapa surat transaksi sekaligus (SPA, SPPA,
+     * Surat Kuasa Balik Nama, BAST, Kuitansi, Surat Pernyataan) dengan satu
+     * gambar tanda tangan dari canvas signature pad.
+     */
+    public function storeForDocuments(DocumentSignatureRequest $request, Transaction $transaction, DocumentSigning $signing): TransactionResource
+    {
+        $this->authorize('view', $transaction);
 
-        $role = $isBuyer ? 'buyer' : 'seller';
-        $path = 'signatures/'.$transaction->id.'/'.$role.'-'.Str::random(8).'.png';
-        Storage::disk('local')->put($path, $request->binaryPng());
+        $signing->sign(
+            $transaction,
+            $request->user(),
+            $request->documentTypes(),
+            $request->binaryPng(),
+            $request->ip(),
+        );
 
-        $transaction->update([
-            ($role.'_signature_path') => $path,
-            ($role.'_signed_at') => now(),
-        ]);
+        return $this->respond($transaction);
+    }
 
-        // Regenerasi PDF yang memuat tanda tangan supaya bukti visual selalu up-to-date.
-        $fresh = $transaction->fresh();
-        $docs->generateSalesPurchaseAgreement($fresh);
-        if ($fresh->escrow_status !== null && $fresh->buyer_confirmed_at && $fresh->seller_confirmed_at) {
-            // Bill of Sale hanya di-regenerate kalau serah-terima sudah tercatat (BoS punya kolom
-            // "Konfirmasi Pembeli/Penjual" yang harus sudah terisi).
-            $docs->generateBillOfSale($fresh);
-        }
-
-        return new TransactionResource($fresh->load(['vehicle.photos', 'documents', 'statusHistories.actor']));
+    private function respond(Transaction $transaction): TransactionResource
+    {
+        return new TransactionResource($transaction->fresh(['vehicle.photos', 'documents', 'documentSignatures', 'statusHistories.actor']));
     }
 }

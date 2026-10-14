@@ -10,6 +10,7 @@ import EscrowStatusBadge from "@/components/EscrowStatusBadge";
 import PayoutStatusBadge from "@/components/PayoutStatusBadge";
 import TransactionStatusHistory from "@/components/TransactionStatusHistory";
 import VdrPanel from "@/components/VdrPanel";
+import SigningCenter from "@/components/SigningCenter";
 import ShipmentPanel from "@/components/ShipmentPanel";
 import ConfirmModal from "@/components/ConfirmModal";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
@@ -264,6 +265,8 @@ export default function AdminTransactionsPage() {
                           </ul>
                         </div>
                       )}
+
+                      <SigningCenter transactionId={detail.id} checklist={detail.signing_checklist} role="admin" />
 
                       <VdrPanel documents={detail.documents} />
 

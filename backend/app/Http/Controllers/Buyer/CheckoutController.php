@@ -4,9 +4,7 @@ namespace App\Http\Controllers\Buyer;
 
 use App\Documents\DocumentGenerator;
 use App\Enums\BuyerProfileStatus;
-use App\Enums\InsuranceType;
 use App\Enums\PaymentGatewayDriver;
-use App\Enums\PaymentScheme;
 use App\Enums\TransactionPaymentStatus;
 use App\Escrow\EscrowStateMachine;
 use App\Http\Controllers\Controller;
@@ -18,10 +16,11 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Payments\PaymentGateway;
 use App\Support\InvoiceNumber;
+use App\Support\PriceBreakdownCalculator;
 
 class CheckoutController extends Controller
 {
-    public function store(CheckoutRequest $request, Vehicle $vehicle, PaymentGateway $gateway, DocumentGenerator $docs): TransactionResource
+    public function store(CheckoutRequest $request, Vehicle $vehicle, PaymentGateway $gateway, DocumentGenerator $docs, PriceBreakdownCalculator $pricing): TransactionResource
     {
         $this->authorize('checkout', $vehicle);
 
@@ -29,17 +28,9 @@ class CheckoutController extends Controller
 
         $this->guardHighValueKyc($request->user(), (float) $vehicle->price);
 
-        $scheme = PaymentScheme::from($request->validated('payment_scheme'));
-        $dpPercent = (float) $request->validated('dp_percent');
-        $insuranceType = InsuranceType::from($request->validated('insurance_type'));
-
-        $vehiclePrice = (float) $vehicle->price;
-        $dpAmount = $scheme === PaymentScheme::Full
-            ? $vehiclePrice
-            : round($vehiclePrice * $dpPercent / 100, 2);
-
-        $insurancePremium = $this->findInsurancePremium($vehicle, $insuranceType);
-        $amountDueNow = $dpAmount + $insurancePremium;
+        $scheme = $request->scheme();
+        $insuranceType = $request->insuranceType();
+        $breakdown = $pricing->forVehicle($vehicle, $scheme, (float) $request->validated('dp_percent'), $insuranceType, $request->insuranceAddons());
 
         $escrowBank = config('payment.escrow_bank');
 
@@ -47,12 +38,14 @@ class CheckoutController extends Controller
             'vehicle_id' => $vehicle->id,
             'buyer_id' => $request->user()->id,
             'seller_id' => $vehicle->seller_id,
-            'amount' => $amountDueNow,
+            'amount' => $breakdown['due_now']['total'],
             'payment_scheme' => $scheme,
-            'dp_percent' => $scheme === PaymentScheme::Full ? 100 : $dpPercent,
-            'vehicle_price' => $vehiclePrice,
+            'dp_percent' => $breakdown['payment']['dp_percent'],
+            'vehicle_price' => $breakdown['vehicle_price'],
             'insurance_type' => $insuranceType,
-            'insurance_premium' => $insurancePremium,
+            'insurance_premium' => $breakdown['insurance']['total'],
+            'insurance_addons' => $breakdown['insurance']['addons'],
+            'price_breakdown' => $breakdown,
             'buyer_address' => $request->validated('buyer_address'),
             'buyer_phone' => $request->validated('buyer_phone'),
             'buyer_notes' => $request->validated('buyer_notes'),
@@ -74,9 +67,8 @@ class CheckoutController extends Controller
             'expires_at' => $invoice->expiresAt,
         ]);
 
-        // Auto-generated saat checkout selesai (Epic 7): Commercial Invoice (tagihan) + SPA (kontrak).
-        $docs->generateCommercialInvoice($transaction);
-        $docs->generateSalesPurchaseAgreement($transaction);
+        // Auto-generated saat checkout selesai (Epic 7 + Sprint 10): invoice, SPA, rincian harga, SPPA.
+        $docs->generateCheckoutDocuments($transaction);
 
         return new TransactionResource($transaction->load('vehicle.photos'));
     }
@@ -95,8 +87,7 @@ class CheckoutController extends Controller
 
             if ($status === TransactionPaymentStatus::Paid) {
                 $escrow->holdFunds($transaction);
-                $docs->generateDepositReceipt($transaction);
-                $docs->generateTaxInvoice($transaction);
+                $docs->generatePaidDocuments($transaction);
             }
         }
 
@@ -163,16 +154,5 @@ class CheckoutController extends Controller
             403,
             'Transaksi bernilai tinggi (di atas Rp'.number_format($threshold, 0, ',', '.').') mensyaratkan KYC & Proof of Funds yang sudah diverifikasi admin. Lengkapi di /buyer/kyc terlebih dahulu.'
         );
-    }
-
-    private function findInsurancePremium(Vehicle $vehicle, InsuranceType $type): float
-    {
-        foreach ($vehicle->effectiveInsuranceOptions() as $option) {
-            if ($option['type'] === $type->value) {
-                return (float) $option['premium'];
-            }
-        }
-
-        return 0.0;
     }
 }

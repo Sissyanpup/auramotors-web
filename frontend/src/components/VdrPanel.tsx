@@ -6,7 +6,7 @@ type Props = {
   documents: TransactionDocument[] | undefined;
 };
 
-const FOLDER_ORDER: TransactionDocumentFolder[] = ["Financial", "Legal"];
+const FOLDER_ORDER: TransactionDocumentFolder[] = ["Legal", "Financial", "Bank", "Insurance"];
 
 const FOLDER_META: Record<TransactionDocumentFolder, { title: string; hint: string }> = {
   Financial: {
@@ -15,7 +15,15 @@ const FOLDER_META: Record<TransactionDocumentFolder, { title: string; hint: stri
   },
   Legal: {
     title: "Dokumen Legal",
-    hint: "Bukti pemindahan hak kepemilikan.",
+    hint: "Kontrak, surat kuasa, BAST & bukti pemindahan hak.",
+  },
+  Bank: {
+    title: "Surat Bank",
+    hint: "Bukti pembayaran & konfirmasi dana escrow.",
+  },
+  Insurance: {
+    title: "Asuransi",
+    hint: "SPPA & ikhtisar polis kendaraan.",
   },
 };
 

@@ -15,6 +15,7 @@ use App\Http\Controllers\Buyer\BuyerProfileController;
 use App\Http\Controllers\Buyer\CheckoutController;
 use App\Http\Controllers\BuyerProfileDocumentController;
 use App\Http\Controllers\Catalog\VehicleCatalogController;
+use App\Http\Controllers\Catalog\VehicleQuoteController;
 use App\Http\Controllers\NavbarSummaryController;
 use App\Http\Controllers\Payments\MockPaymentController;
 use App\Http\Controllers\Payments\XenditWebhookController;
@@ -139,6 +140,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // E-signature: buyer/seller menandatangani transaksi via canvas signature pad (Epic 7B).
     Route::post('/transactions/{transaction}/sign', [SignatureController::class, 'store'])->name('transactions.sign');
+    // Tanda tangan per dokumen (SPA, SPPA, Surat Kuasa, BAST, Kuitansi, Surat Pernyataan) — Sprint 10.
+    Route::post('/transactions/{transaction}/document-signatures', [SignatureController::class, 'storeForDocuments'])->name('transactions.document-signatures.store');
 
     // Shipment / logistik cross-border (Epic 9). Buyer & seller boleh view/init/update/upload docs.
     // Transisi state di-handle admin di /admin/... di atas.
@@ -170,3 +173,5 @@ Route::post('/webhooks/xendit', XenditWebhookController::class)->name('webhooks.
 // Katalog publik
 Route::get('/vehicles', [VehicleCatalogController::class, 'index'])->name('catalog.index');
 Route::get('/vehicles/{vehicle}', [VehicleCatalogController::class, 'show'])->name('catalog.show');
+// Simulasi rincian harga (DP, asuransi + perluasan, pajak, biaya balik nama, kredit).
+Route::get('/vehicles/{vehicle}/quote', VehicleQuoteController::class)->name('catalog.quote');

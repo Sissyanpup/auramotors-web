@@ -63,6 +63,9 @@ export default function Header() {
     router.refresh();
   }
 
+  // Portal bank simulasi tampil sebagai situs pihak ketiga (tema putih), tanpa navbar AuraMotors.
+  if (pathname.startsWith("/bank-portal")) return null;
+
   return (
     <>
     <header className="sticky top-0 z-40 border-b border-border/60 bg-surface/90 backdrop-blur-md">

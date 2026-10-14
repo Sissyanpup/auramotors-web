@@ -156,8 +156,93 @@ export type TransactionDocumentType =
   | "bill_of_sale"
   | "sales_purchase_agreement"
   | "escrow_disbursement_note"
-  | "tax_invoice";
-export type TransactionDocumentFolder = "Financial" | "Legal";
+  | "tax_invoice"
+  | "price_breakdown"
+  | "insurance_application"
+  | "insurance_policy"
+  | "bank_payment_advice"
+  | "escrow_fund_confirmation"
+  | "seller_ownership_statement"
+  | "ownership_transfer_poa"
+  | "handover_minutes"
+  | "sale_receipt";
+export type TransactionDocumentFolder = "Financial" | "Legal" | "Insurance" | "Bank";
+
+export type SignerRole = "buyer" | "seller";
+
+export type SigningChecklistItem = {
+  type: TransactionDocumentType;
+  label: string;
+  folder: TransactionDocumentFolder;
+  download_url: string;
+  signers: { role: SignerRole; name: string | null; signed_at: string | null }[];
+  is_complete: boolean;
+};
+
+/** Satu baris rincian harga: label + rumus dalam bahasa manusia + jumlah. */
+export type BreakdownLine = { label: string; basis?: string; amount: number; code?: string; payee?: string };
+
+export type InsuranceAddonOption = {
+  code: string;
+  label: string;
+  description: string;
+  basis: string;
+  premium: number;
+};
+
+/** Snapshot dari App\Support\PriceBreakdownCalculator (backend). */
+export type PriceBreakdown = {
+  version: number;
+  vehicle_price: number;
+  payment: { scheme: PaymentScheme; dp_percent: number; dp_amount: number; remaining_amount: number };
+  price_composition: { lines: BreakdownLine[]; total: number; note: string };
+  insurance: {
+    type: InsuranceKind;
+    label: string;
+    insurer: string | null;
+    sum_insured: number;
+    addons: string[];
+    lines: BreakdownLine[];
+    total: number;
+    deductible_per_claim: number | null;
+    theft_settlement_percent: number | null;
+    total_loss_threshold_percent: number | null;
+  };
+  due_now: { lines: BreakdownLine[]; total: number };
+  registration: { njkb: number; njkb_basis: string; lines: BreakdownLine[]; total: number; note: string };
+  seller_settlement: {
+    escrow_vehicle_portion: number;
+    commission_rate: number;
+    commission: number;
+    commission_basis: string;
+    net_from_escrow: number;
+    direct_remaining: number;
+    total_net: number;
+    note: string;
+  };
+  total_cost_of_ownership: { lines: BreakdownLine[]; total: number };
+  credit_simulation: {
+    applicable: boolean;
+    lender: string;
+    note: string;
+    principal?: number;
+    provision_rate?: number;
+    provision_amount?: number;
+    admin_fee?: number;
+    rows: {
+      tenor_months: number;
+      flat_rate: number;
+      interest_total: number;
+      monthly_installment: number;
+      monthly_installment_with_insurance: number;
+      total_payment: number;
+    }[];
+  };
+};
+
+export type PriceQuote = { breakdown: PriceBreakdown; available_addons: InsuranceAddonOption[] };
+
+export type PaymentMethod = "card" | "paypal" | "virtual_account" | "simulation";
 
 export type TransactionDocument = {
   id: number;
@@ -208,6 +293,8 @@ export type Transaction = {
   dp_percent: string | null;
   insurance_type: InsuranceKind | null;
   insurance_premium: string | null;
+  insurance_addons?: string[];
+  insurance_policy_number?: string | null;
   buyer_address: string | null;
   buyer_phone: string | null;
   buyer_notes: string | null;
@@ -217,6 +304,11 @@ export type Transaction = {
   bank_transfer_account_holder: string | null;
   payment_gateway: PaymentGateway;
   payment_status: PaymentStatus;
+  payment_method?: PaymentMethod | null;
+  payment_channel?: string | null;
+  payment_account_masked?: string | null;
+  payment_payer_name?: string | null;
+  payment_approval_code?: string | null;
   gateway_reference: string | null;
   gateway_invoice_url: string | null;
   paid_at: string | null;
@@ -236,6 +328,8 @@ export type Transaction = {
   status_history?: TransactionStatusHistoryEntry[];
   payouts?: TransactionPayout[];
   documents?: TransactionDocument[];
+  price_breakdown?: PriceBreakdown;
+  signing_checklist?: SigningChecklistItem[];
   shipment?: Shipment | null;
   created_at: string;
 };
