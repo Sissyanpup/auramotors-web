@@ -16,6 +16,8 @@ import PriceBreakdownPanel from "@/components/PriceBreakdownPanel";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
 import DeliveryTracker from "@/components/DeliveryTracker";
 import WarrantyClaimModal from "@/components/WarrantyClaimModal";
+import HandoverProgress from "@/components/HandoverProgress";
+import CreditPanel from "@/components/CreditPanel";
 
 export default function BuyerTransactionDetailPage({
   params,
@@ -34,7 +36,7 @@ export default function BuyerTransactionDetailPage({
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showWarrantyModal, setShowWarrantyModal] = useState(false);
   // Progress pengantaran GPS (0-1). Default 1 supaya kalau tracker belum
-  // aktif (mis. transaksi belum masuk fase escrow_hold), tombol tidak
+  // aktif (mis. penjual belum menyerahkan kendaraan), tombol tidak
   // ke-block. Tracker akan meng-emit 0 → 1 selama DELIVERY_SECONDS berjalan.
   const [deliveryProgress, setDeliveryProgress] = useState(1);
   const handleDeliveryProgress = useCallback((p: number) => setDeliveryProgress(p), []);
@@ -137,7 +139,10 @@ export default function BuyerTransactionDetailPage({
     return <p className="text-sm text-error">Transaksi tidak ditemukan.</p>;
   }
 
-  const canConfirmHandover = transaction.escrow_status === "escrow_hold" && !transaction.buyer_confirmed_at;
+  // Pembeli baru bisa konfirmasi terima setelah admin menyetujui serah terima
+  // dan penjual menandai kendaraan sudah diserahkan/diberangkatkan.
+  const canConfirmHandover =
+    transaction.escrow_status === "serah_terima" && !!transaction.seller_confirmed_at && !transaction.buyer_confirmed_at;
   // Dispute hanya boleh diajukan selama buyer belum menerima kendaraan
   // (analog ke olshop: "laporkan pesanan" hilang setelah "pesanan diterima").
   const canDispute =
@@ -149,9 +154,8 @@ export default function BuyerTransactionDetailPage({
     transaction.escrow_status !== "refunded";
 
   // Tampilkan tracker GPS hanya saat pengantaran benar-benar berjalan
-  // (fase escrow_hold, buyer belum konfirmasi terima).
-  const showDeliveryTracker =
-    transaction.escrow_status === "escrow_hold" && !transaction.buyer_confirmed_at;
+  // (penjual sudah memberangkatkan, buyer belum konfirmasi terima).
+  const showDeliveryTracker = canConfirmHandover;
 
   // Gate tombol Terima/Laporkan saat fase pengantaran berlangsung sampai
   // armada dummy "tiba" di lokasi (progress >= 1). Setelah buyer konfirmasi
@@ -168,9 +172,13 @@ export default function BuyerTransactionDetailPage({
   const vehiclePrice = Number(transaction.vehicle_price ?? transaction.vehicle.price ?? 0);
   const paidNow = Number(transaction.amount ?? 0);
   const insurancePremium = Number(transaction.insurance_premium ?? 0);
-  const dpPortion = Math.max(0, paidNow - insurancePremium);
+  const registrationInEscrow = transaction.price_breakdown?.registration.in_escrow
+    ? transaction.price_breakdown.registration.total
+    : 0;
+  const dpPortion = transaction.price_breakdown?.payment.dp_amount ?? Math.max(0, paidNow - insurancePremium);
   const remainingToSeller = Math.max(0, vehiclePrice - dpPortion);
   const isFullPayment = transaction.payment_scheme === "full";
+  const isCredit = transaction.payment_scheme === "credit";
 
   return (
     <div>
@@ -374,13 +382,30 @@ export default function BuyerTransactionDetailPage({
         )}
       </div>
 
+      {transaction.loan && (
+        <div className="mt-6">
+          <CreditPanel
+            loan={transaction.loan}
+            perspective="buyer"
+            paymentReference={transaction.gateway_reference}
+            onRefresh={loadTransaction}
+          />
+        </div>
+      )}
+
+      {transaction.payment_status === "paid" && (
+        <div className="mt-6">
+          <HandoverProgress transaction={transaction} perspective="buyer" />
+        </div>
+      )}
+
       {showDeliveryTracker && (
         <div className="mt-6">
           <DeliveryTracker
             transactionId={transaction.id}
             sellerLocation={transaction.vehicle.location}
             buyerAddress={transaction.buyer_address}
-            startedAt={transaction.paid_at ?? transaction.created_at}
+            startedAt={transaction.seller_confirmed_at ?? transaction.paid_at ?? transaction.created_at}
             totalSeconds={DELIVERY_SECONDS}
             onProgressChange={handleDeliveryProgress}
           />
@@ -406,7 +431,9 @@ export default function BuyerTransactionDetailPage({
                 Kamu telah mengkonfirmasi penerimaan kendaraan pada {formatDate(transaction.buyer_confirmed_at)}.
                 {isFullPayment
                   ? " Tidak ada tagihan lanjutan — dana escrow menunggu approval admin untuk dilepas ke seller."
-                  : " Berikut ringkasan tagihan tersisa untuk kamu selesaikan langsung dengan seller."}
+                  : isCredit
+                    ? " Sisa harga sudah dilunasi leasing ke seller — lanjutkan membayar angsuran sesuai jadwal kredit."
+                    : " Berikut ringkasan tagihan tersisa untuk kamu selesaikan langsung dengan seller."}
               </p>
 
               <dl className="mt-4 divide-y divide-border rounded-md border border-border bg-surface text-sm">
@@ -423,13 +450,19 @@ export default function BuyerTransactionDetailPage({
                 </div>
                 {insurancePremium > 0 && (
                   <div className="flex items-center justify-between px-3 py-2">
-                    <dt className="text-on-surface-muted">Premi asuransi (termasuk di atas)</dt>
+                    <dt className="text-on-surface-muted">Premi asuransi (dibayar terpisah via escrow)</dt>
                     <dd className="text-on-surface">{formatRupiah(insurancePremium)}</dd>
+                  </div>
+                )}
+                {registrationInEscrow > 0 && (
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <dt className="text-on-surface-muted">Biaya balik nama (dibayar bersama DP)</dt>
+                    <dd className="text-on-surface">{formatRupiah(registrationInEscrow)}</dd>
                   </div>
                 )}
                 <div className="flex items-center justify-between px-3 py-2 text-base font-semibold">
                   <dt className={isFullPayment ? "text-success" : "text-on-surface"}>
-                    {isFullPayment ? "Status" : "Sisa pelunasan"}
+                    {isFullPayment ? "Status" : isCredit ? "Sisa harga (dilunasi leasing, kamu mencicil)" : "Sisa pelunasan"}
                   </dt>
                   <dd className={isFullPayment ? "text-success" : "text-primary"}>
                     {isFullPayment ? "LUNAS" : formatRupiah(remainingToSeller)}
@@ -437,7 +470,7 @@ export default function BuyerTransactionDetailPage({
                 </div>
               </dl>
 
-              {!isFullPayment && remainingToSeller > 0 && (
+              {!isFullPayment && !isCredit && remainingToSeller > 0 && (
                 <div className="mt-3 rounded-md border border-warning/40 bg-warning/5 p-3 text-xs text-on-surface-muted">
                   <p className="font-semibold text-warning">Bayar selanjutnya langsung ke seller</p>
                   <p className="mt-1">
@@ -501,9 +534,9 @@ export default function BuyerTransactionDetailPage({
             userRole="buyer"
             onUpdate={loadTransaction}
           />
-        ) : (
+        ) : transaction.handover_approved_at ? (
           <ShipmentInitForm transactionId={transaction.id} onUpdate={loadTransaction} />
-        )}
+        ) : null}
       </div>
 
       {transaction.status_history && transaction.status_history.length > 0 && (
@@ -567,9 +600,9 @@ export default function BuyerTransactionDetailPage({
             </>
           }
           consequences={[
-            "Dana escrow akan dilepas ke seller setelah admin verifikasi.",
+            "Dana escrow akan dilepas ke seller setelah admin memverifikasi BAST yang ditandatangani kedua pihak.",
             "Kamu tidak dapat lagi mengajukan sengketa (dispute) untuk transaksi ini.",
-            "Status transaksi berpindah ke tahap payout (pencairan).",
+            "Bill of Sale (akta jual beli) terbit otomatis sebagai bukti serah terima.",
           ]}
           confirmWord="TERIMA"
           confirmLabel="Ya, Kendaraan Sudah Diterima"

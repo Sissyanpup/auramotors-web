@@ -63,19 +63,22 @@ class NavbarSummaryController extends Controller
         if ($user->isBuyer()) {
             $query = Transaction::query()
                 ->where('buyer_id', $user->id)
-                ->whereIn('escrow_status', [EscrowStatus::SerahTerima, EscrowStatus::PayoutRelease])
+                ->where('escrow_status', EscrowStatus::SerahTerima)
+                ->whereNotNull('seller_confirmed_at')
                 ->whereNull('buyer_confirmed_at');
 
             return [
                 $query->count(),
-                $this->transactionItems($query, 'Konfirmasi serah-terima', fn (Transaction $transaction): string => "/buyer/transactions/{$transaction->id}"),
+                $this->transactionItems($query, 'Kendaraan diserahkan — konfirmasi penerimaan', fn (Transaction $transaction): string => "/buyer/transactions/{$transaction->id}"),
             ];
         }
 
         if ($user->isSeller()) {
             $query = Transaction::query()
                 ->where('seller_id', $user->id)
-                ->whereIn('escrow_status', [EscrowStatus::EscrowHold, EscrowStatus::SerahTerima]);
+                ->where(fn (Builder $query) => $query
+                    ->where(fn (Builder $query) => $query->where('escrow_status', EscrowStatus::EscrowHold)->whereNull('handover_requested_at'))
+                    ->orWhere(fn (Builder $query) => $query->where('escrow_status', EscrowStatus::SerahTerima)->whereNull('seller_confirmed_at')));
 
             return [
                 $query->count(),
@@ -119,8 +122,9 @@ class NavbarSummaryController extends Controller
         $kycQuery = SellerProfile::query()->where('status', SellerProfileStatus::Pending);
         $vehicleQuery = Vehicle::query()->where('status', VehicleStatus::PendingReview);
         $disputeQuery = Transaction::query()->where('escrow_status', EscrowStatus::Dispute);
+        $handoverQuery = Transaction::query()->where('escrow_status', EscrowStatus::EscrowHold)->whereNotNull('handover_requested_at');
 
-        $count = $kycQuery->count() + $vehicleQuery->count() + $disputeQuery->count();
+        $count = $kycQuery->count() + $vehicleQuery->count() + $disputeQuery->count() + $handoverQuery->count();
 
         $kycItems = (clone $kycQuery)
             ->with('user:id,name')
@@ -148,10 +152,12 @@ class NavbarSummaryController extends Controller
             ]);
 
         $disputeItems = $this->transactionItems($disputeQuery, 'Dispute terbuka', fn (): string => '/admin/transactions');
+        $handoverItems = $this->transactionItems($handoverQuery, 'Pengajuan serah terima menunggu persetujuan', fn (): string => '/admin/transactions');
 
         $items = $kycItems
             ->concat($vehicleItems)
             ->concat($disputeItems)
+            ->concat($handoverItems)
             ->sortByDesc('created_at')
             ->take(self::NOTIFICATION_ITEM_LIMIT);
 

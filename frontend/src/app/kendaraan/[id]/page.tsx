@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { API_URL } from "@/lib/api";
-import { formatRupiah } from "@/lib/format";
+import PromoPrice from "@/components/PromoPrice";
 import type { VehicleDetail } from "@/lib/types";
 import CheckoutWidget from "@/components/CheckoutWidget";
 
@@ -61,7 +61,7 @@ export default async function VehicleDetailPage({
         <h1 className="mt-6 text-2xl font-semibold text-on-surface">
           {vehicle.brand} {vehicle.model} {vehicle.year}
         </h1>
-        <p className="mt-1 text-2xl font-bold text-primary">{formatRupiah(vehicle.price)}</p>
+        <PromoPrice price={vehicle.price} promo={vehicle.promo} size="lg" />
         <p className="mt-1 text-sm text-on-surface-muted">
           {vehicle.mileage.toLocaleString("id-ID")} km &middot; {vehicle.location}
         </p>

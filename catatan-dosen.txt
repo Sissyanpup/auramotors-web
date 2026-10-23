@@ -28,3 +28,15 @@ Catatan Projek Offline :
 - para asuransi sangat jeli, pada histori pembeli.
 - HARUS breakdown sedetail mungkin dalam ASURANSI, KOMPRI, Keuangan, Harga, Cicilan, Pajak, dan Lainnya.
 - Tambahkan metode Kredit, dibahas terlebih dahulu karena pembahasannya luas.
+
+16 october 2026 
+
+- menu admin sebaiknya khusus berada di samping kiri seperti templet pada umumnya.
+- revisi keungan seperti kredit, bunganya terlalu rendah jika dilihat dari cicilan pembelian mobil. Namun check dulu contoh jual beli kendaraan mahal yang ada.
+- Tambahkan tabel report, data lapora. report atau mengelola laporan data lengkap beserta macam-macam diagram grafik
+- Untuk "kembalikan nama pemilik" itu masukkan ke DP, bukan cicilan.
+- Harusnya ada bonus untuk seller dalam keberhasilan menjual mobilnya. 
+- Juga tambahkan beberapa promo untuk buyer.
+- Tambahkan fitur atau tabel pemantauan cicilan pembelian mobil, kelola cicilan, dan lainnya.
+- Fitur "setujui serah terima" harusnya berefek ke pembelian mobil, dimana barang tidak langsung diserahkan atau diberangkatkan, harus persetujuannya menunggu disetujui dahulu baru barang bisa diserahkan seller ke pembeli. 
+- Admin juga bisa memantau semua gerak gerik proses jual beli ini.

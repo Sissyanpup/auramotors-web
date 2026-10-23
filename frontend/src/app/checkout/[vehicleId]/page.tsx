@@ -11,9 +11,14 @@ import Badge from "@/components/Badge";
 import PriceBreakdownPanel from "@/components/PriceBreakdownPanel";
 import type { InsuranceOption, InsuranceKind, PaymentOption, PaymentScheme, PriceQuote, Transaction, VehicleDetail } from "@/lib/types";
 
+/** Kebijakan leasing (config/pricing.php → credit): DP minimal 20%, tenor 12–60 bulan. */
+const CREDIT_DP_OPTIONS = [20, 25, 30, 40, 50];
+const CREDIT_TENORS = [12, 24, 36, 48, 60];
+
 type FormState = {
   scheme: PaymentScheme;
   percent: number;
+  tenor: number;
   insuranceType: InsuranceKind;
   insuranceAddons: string[];
   address: string;
@@ -24,6 +29,7 @@ type FormState = {
 const INITIAL_FORM: FormState = {
   scheme: "down_payment",
   percent: 10,
+  tenor: 36,
   insuranceType: "none",
   insuranceAddons: [],
   address: "",
@@ -45,6 +51,10 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
   const [showConfirm, setShowConfirm] = useState(false);
   const [quote, setQuote] = useState<PriceQuote | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  // Kode voucher: draft di input, appliedCode yang benar-benar dikirim ke quote/checkout.
+  const [promoInput, setPromoInput] = useState("");
+  const [appliedCode, setAppliedCode] = useState("");
+  const [promoError, setPromoError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +83,8 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
       dp_percent: String(form.percent),
       insurance_type: form.insuranceType,
     });
+    if (form.scheme === "credit") query.set("tenor_months", String(form.tenor));
+    if (appliedCode) query.set("promo_code", appliedCode);
     form.insuranceAddons.forEach((code) => query.append("insurance_addons[]", code));
 
     apiFetch<{ data: PriceQuote }>(`/api/vehicles/${vehicle.id}/quote?${query.toString()}`)
@@ -82,12 +94,19 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
         setQuoteError(null);
       })
       .catch((err) => {
-        if (!cancelled) setQuoteError(err instanceof ApiError ? err.message : "Gagal menghitung rincian harga.");
+        if (cancelled) return;
+        // Voucher tidak berlaku untuk pilihan ini → lepas kodenya, pratinjau dihitung ulang tanpa voucher.
+        if (err instanceof ApiError && err.errors?.promo_code) {
+          setPromoError(err.errors.promo_code[0]);
+          setAppliedCode("");
+          return;
+        }
+        setQuoteError(err instanceof ApiError ? err.message : "Gagal menghitung rincian harga.");
       });
     return () => {
       cancelled = true;
     };
-  }, [vehicle, form.scheme, form.percent, form.insuranceType, form.insuranceAddons]);
+  }, [vehicle, form.scheme, form.percent, form.tenor, form.insuranceType, form.insuranceAddons, appliedCode]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/login");
@@ -105,8 +124,12 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
 
   const price = vehicle ? Number(vehicle.price) : 0;
   const isFullPayment = form.scheme === "full";
+  const isCredit = form.scheme === "credit";
+  const creditPlan = isCredit ? quote?.breakdown.credit ?? null : null;
+  const creditRows = quote?.breakdown.credit_simulation.rows ?? [];
   const dpAmount = isFullPayment ? price : Math.round((price * form.percent) / 100);
   const insurancePremium = quote?.breakdown.insurance.total ?? selectedInsurance?.premium ?? 0;
+  const registrationFee = quote?.breakdown.registration.in_escrow ? quote.breakdown.registration.total : 0;
   const totalDueNow = quote?.breakdown.due_now.total ?? dpAmount + insurancePremium;
   const availableAddons = form.insuranceType === "none" ? [] : quote?.available_addons ?? [];
 
@@ -119,6 +142,22 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
     }));
   }
   const remainingAfterDp = Math.max(price - dpAmount, 0);
+
+  function selectMode(mode: "cash" | "credit") {
+    if (mode === "credit") {
+      // Leasing mewajibkan asuransi selama tenor — pilih opsi berasuransi pertama.
+      const insured = insuranceOptions.find((opt) => opt.type !== "none");
+      setForm((prev) => ({
+        ...prev,
+        scheme: "credit",
+        percent: CREDIT_DP_OPTIONS[0],
+        insuranceType: prev.insuranceType === "none" && insured ? insured.type : prev.insuranceType,
+        insuranceAddons: prev.insuranceType === "none" ? [] : prev.insuranceAddons,
+      }));
+    } else {
+      selectScheme(paymentOptions[0]?.percent ?? 10);
+    }
+  }
 
   function selectScheme(percent: number) {
     if (percent >= 100) {
@@ -152,6 +191,8 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
         body: {
           payment_scheme: form.scheme,
           dp_percent: form.percent,
+          tenor_months: isCredit ? form.tenor : undefined,
+          promo_code: appliedCode || undefined,
           insurance_type: form.insuranceType,
           insurance_addons: form.insuranceAddons,
           buyer_address: form.address.trim(),
@@ -217,7 +258,97 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
           {/* Skema pembayaran */}
           <section className="rounded-lg border border-border bg-surface-container p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-on-surface-muted">Skema Pembayaran</h2>
-            <p className="mt-1 text-xs text-on-surface-muted">
+            <div className="mt-3 grid grid-cols-2 gap-2" role="tablist" aria-label="Cara bayar">
+              {([
+                ["cash", "Tunai / DP", "Sisa dilunasi langsung ke penjual"],
+                ["credit", "Kredit Leasing", "Sisa dicicil ke leasing 12–60 bulan"],
+              ] as const).map(([mode, title, subtitle]) => {
+                const active = (mode === "credit") === isCredit;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => selectMode(mode)}
+                    className={`rounded-md border p-3 text-left transition-colors ${
+                      active ? "border-primary bg-primary/10" : "border-border bg-surface hover:border-primary/40"
+                    }`}
+                  >
+                    <p className="text-sm font-semibold text-on-surface">{title}</p>
+                    <p className="mt-0.5 text-xs text-on-surface-muted">{subtitle}</p>
+                  </button>
+                );
+              })}
+            </div>
+
+            {isCredit ? (
+              <div className="mt-5 space-y-5">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-on-surface-muted">Uang muka (min. 20%)</h3>
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {CREDIT_DP_OPTIONS.map((percent) => (
+                      <button
+                        key={percent}
+                        type="button"
+                        onClick={() => setForm((prev) => ({ ...prev, percent }))}
+                        className={`rounded-md border p-2.5 text-left transition-colors ${
+                          form.percent === percent
+                            ? "border-primary bg-primary/10"
+                            : "border-border bg-surface hover:border-primary/40"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-on-surface">DP {percent}%</p>
+                        <p className="mt-0.5 text-[11px] text-on-surface-muted">{formatRupiah(Math.round((price * percent) / 100))}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-on-surface-muted">Tenor &amp; angsuran per bulan</h3>
+                  <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                    {CREDIT_TENORS.map((tenor) => {
+                      const row = creditRows.find((r) => r.tenor_months === tenor);
+                      return (
+                        <button
+                          key={tenor}
+                          type="button"
+                          onClick={() => setForm((prev) => ({ ...prev, tenor }))}
+                          className={`rounded-md border p-2.5 text-left transition-colors ${
+                            form.tenor === tenor ? "border-primary bg-primary/10" : "border-border bg-surface hover:border-primary/40"
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-on-surface">{tenor} bulan</p>
+                          <p className="mt-0.5 text-[11px] text-on-surface-muted">
+                            {row ? `${formatRupiah(row.monthly_installment_with_insurance)}/bln` : "…"}
+                          </p>
+                          {row && (
+                            <p className="text-[10px] text-on-surface-muted">
+                              bunga {(row.flat_rate * 100).toLocaleString("id-ID")}% flat
+                            </p>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {creditPlan && (
+                  <div className="rounded-md border border-border bg-surface p-3 text-xs text-on-surface-muted">
+                    <p>
+                      <span className="font-semibold text-on-surface">{creditPlan.lender}</span> membiayai{" "}
+                      {formatRupiah(creditPlan.principal)} ({creditPlan.rate_basis}; bunga efektif ±
+                      {(creditPlan.effective_rate * 100).toLocaleString("id-ID", { maximumFractionDigits: 2 })}%/tahun).
+                    </p>
+                    <p className="mt-1">
+                      Leasing melunasi sisa harga ke penjual setelah kredit disetujui. Angsuran pertama jatuh tempo sebulan kemudian.
+                      Asuransi wajib selama tenor; premi tahun ke-2 dst. sudah termasuk angsuran.
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+            <>
+            <p className="mt-3 text-xs text-on-surface-muted">
               Pilih besaran DP atau bayar penuh. Dana masuk ke escrow sampai serah-terima terverifikasi.
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -244,6 +375,8 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                 );
               })}
             </div>
+            </>
+            )}
           </section>
 
           {/* Asuransi */}
@@ -255,12 +388,14 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
             <div className="mt-3 space-y-2">
               {insuranceOptions.map((opt) => {
                 const active = form.insuranceType === opt.type;
+                const lockedByCredit = isCredit && opt.type === "none";
                 return (
                   <label
                     key={opt.type}
-                    className={`flex cursor-pointer items-center justify-between gap-3 rounded-md border p-3 transition-colors ${
-                      active ? "border-primary bg-primary/10" : "border-border bg-surface hover:border-primary/40"
-                    }`}
+                    title={lockedByCredit ? "Kredit leasing wajib berasuransi selama tenor" : undefined}
+                    className={`flex items-center justify-between gap-3 rounded-md border p-3 transition-colors ${
+                      lockedByCredit ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+                    } ${active ? "border-primary bg-primary/10" : "border-border bg-surface hover:border-primary/40"}`}
                   >
                     <div className="flex items-center gap-3">
                       <input
@@ -268,6 +403,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                         name="insurance"
                         value={opt.type}
                         checked={active}
+                        disabled={lockedByCredit}
                         onChange={() => setForm((prev) => ({ ...prev, insuranceType: opt.type, insuranceAddons: [] }))}
                         className="h-4 w-4 text-primary focus:ring-primary"
                       />
@@ -331,6 +467,57 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                 </ul>
               </div>
             )}
+          </section>
+
+          {/* Kode promo */}
+          <section className="rounded-lg border border-border bg-surface-container p-5">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-on-surface-muted">Kode Promo</h2>
+            <p className="mt-1 text-xs text-on-surface-muted">Punya voucher? Masukkan kodenya. Promo otomatis sudah dihitung tanpa kode.</p>
+            <div className="mt-3 flex gap-2">
+              <input
+                value={promoInput}
+                onChange={(e) => {
+                  setPromoInput(e.target.value.toUpperCase());
+                  setPromoError(null);
+                }}
+                placeholder="mis. AURAHEMAT"
+                maxLength={32}
+                className="input-field font-mono uppercase"
+                aria-label="Kode promo"
+              />
+              {appliedCode ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAppliedCode("");
+                    setPromoInput("");
+                  }}
+                  className="rounded-md border border-border px-3 text-sm text-on-surface hover:bg-surface-container-high"
+                >
+                  Hapus
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={!promoInput.trim()}
+                  onClick={() => {
+                    setPromoError(null);
+                    setAppliedCode(promoInput.trim());
+                  }}
+                  className="rounded-md border border-primary px-3 text-sm font-medium text-primary hover:bg-primary/10 disabled:opacity-40"
+                >
+                  Pakai
+                </button>
+              )}
+            </div>
+            {promoError && <p className="mt-2 text-xs text-error">{promoError}</p>}
+            {(quote?.breakdown.promotions?.lines ?? []).filter((line) => line.applied).map((line) => (
+              <p key={line.promo_id} className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="rounded bg-error px-1.5 py-0.5 font-semibold text-white">{line.badge ?? (line.kind === "voucher" ? "Voucher" : "Promo")}</span>
+                <span className="text-on-surface">{line.label}</span>
+                <span className="font-medium text-success">hemat {formatRupiah(line.saving)}</span>
+              </p>
+            ))}
           </section>
 
           {/* Alamat pengantaran */}
@@ -414,7 +601,7 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
               </div>
               <div className="flex items-center justify-between">
                 <dt className="text-on-surface-muted">
-                  {isFullPayment ? "Bayar penuh" : `DP ${form.percent}%`}
+                  {isFullPayment ? "Bayar penuh" : isCredit ? `DP kredit ${form.percent}%` : `DP ${form.percent}%`}
                 </dt>
                 <dd className="text-on-surface">{formatRupiah(dpAmount)}</dd>
               </div>
@@ -424,7 +611,27 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                   <dd className="text-on-surface">{formatRupiah(insurancePremium)}</dd>
                 </div>
               )}
-              {!isFullPayment && (
+              {registrationFee > 0 && (
+                <div className="flex items-center justify-between">
+                  <dt className="text-on-surface-muted">Biaya balik nama &amp; registrasi</dt>
+                  <dd className="text-on-surface">{formatRupiah(registrationFee)}</dd>
+                </div>
+              )}
+              {creditPlan && (
+                <div className="flex items-center justify-between">
+                  <dt className="text-on-surface-muted">Provisi, admin &amp; fidusia</dt>
+                  <dd className="text-on-surface">{formatRupiah(creditPlan.upfront.total)}</dd>
+                </div>
+              )}
+              {(quote?.breakdown.promotions?.lines ?? [])
+                .filter((line) => line.applied && line.in_due_now)
+                .map((line) => (
+                  <div key={line.promo_id} className="flex items-center justify-between">
+                    <dt className="text-success">Promo: {line.name}</dt>
+                    <dd className="text-success">&minus; {formatRupiah(line.saving)}</dd>
+                  </div>
+                ))}
+              {!isFullPayment && !isCredit && (
                 <div className="flex items-center justify-between text-xs text-on-surface-muted">
                   <dt>Sisa pelunasan (di luar sistem)</dt>
                   <dd>{formatRupiah(remainingAfterDp)}</dd>
@@ -434,6 +641,14 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
                 <dt className="text-on-surface">Bayar sekarang</dt>
                 <dd className="text-primary">{formatRupiah(totalDueNow)}</dd>
               </div>
+              {creditPlan && (
+                <div className="flex items-center justify-between rounded-md bg-primary/10 px-2 py-1.5 text-sm">
+                  <dt className="text-on-surface">Angsuran ke leasing</dt>
+                  <dd className="font-semibold text-on-surface">
+                    {formatRupiah(creditPlan.monthly_installment)} &times; {creditPlan.tenor_months}
+                  </dd>
+                </div>
+              )}
             </dl>
 
             <div className="mt-4 rounded-md border border-border bg-surface p-3 text-xs text-on-surface-muted">
@@ -464,11 +679,15 @@ export default function CheckoutFormPage({ params }: { params: Promise<{ vehicle
             </>
           }
           consequences={[
-            `Total ${formatRupiah(totalDueNow)} akan ditagihkan (${isFullPayment ? "bayar penuh" : `DP ${form.percent}%`}${insurancePremium > 0 ? " + premi asuransi" : ""}).`,
+            `Total ${formatRupiah(totalDueNow)} akan ditagihkan (${isFullPayment ? "bayar penuh" : `DP ${form.percent}%`}${insurancePremium > 0 ? " + premi asuransi" : ""}${registrationFee > 0 ? " + biaya balik nama" : ""}${creditPlan ? " + biaya kredit di muka" : ""}).`,
             "Nomor invoice resmi diterbitkan otomatis dan tidak dapat diubah.",
             `Dokumen terbit: Commercial Invoice, Perjanjian Jual Beli (3 pihak), Rincian Harga & Biaya${form.insuranceType !== "none" ? ", dan SPPA asuransi" : ""}.`,
             "Data KTP, alamat, dan nomor telepon akan tercantum pada nota transaksi.",
-            !isFullPayment ? `Sisa pelunasan ${formatRupiah(remainingAfterDp)} diselesaikan di luar sistem antara kamu dan seller.` : "Transaksi ini bersifat lunas.",
+            creditPlan
+              ? `Pengajuan kredit ke ${creditPlan.lender} terkirim setelah DP dibayar. Jika disetujui, kamu wajib membayar ${formatRupiah(creditPlan.monthly_installment)} per bulan selama ${creditPlan.tenor_months} bulan; keterlambatan dikenai denda harian.`
+              : !isFullPayment
+                ? `Sisa pelunasan ${formatRupiah(remainingAfterDp)} diselesaikan di luar sistem antara kamu dan seller.`
+                : "Transaksi ini bersifat lunas.",
           ]}
           confirmWord="BAYAR"
           confirmLabel="Ya, Terbitkan Invoice"

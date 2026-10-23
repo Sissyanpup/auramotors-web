@@ -52,7 +52,8 @@ class TransactionDocumentsInsuranceTest extends TestCase
         $response->assertOk()
             ->assertJsonPath('data.breakdown.payment.dp_amount', 40_000_000)
             ->assertJsonPath('data.breakdown.insurance.total', 11_110_000)
-            ->assertJsonPath('data.breakdown.due_now.total', 51_110_000)
+            ->assertJsonPath('data.breakdown.due_now.total', 60_828_000)
+            ->assertJsonPath('data.breakdown.registration.in_escrow', true)
             ->assertJsonPath('data.breakdown.registration.total', 9_718_000)
             ->assertJsonPath('data.breakdown.seller_settlement.commission', 1_200_000)
             ->assertJsonPath('data.breakdown.seller_settlement.total_net', 398_800_000)
@@ -78,10 +79,11 @@ class TransactionDocumentsInsuranceTest extends TestCase
     {
         [$buyer, $transaction] = $this->checkoutWithInsurance();
 
-        $this->assertSame('51110000.00', $transaction->amount);
+        // DP 40jt + asuransi 11,11jt + balik nama 9,718jt.
+        $this->assertSame('60828000.00', $transaction->amount);
         $this->assertSame('11110000.00', $transaction->insurance_premium);
         $this->assertSame(['flood', 'towing_replacement'], $transaction->insurance_addons);
-        $this->assertSame(51_110_000, (int) $transaction->price_breakdown['due_now']['total']);
+        $this->assertSame(60_828_000, (int) $transaction->price_breakdown['due_now']['total']);
 
         foreach ([TransactionDocumentType::CommercialInvoice, TransactionDocumentType::SalesPurchaseAgreement, TransactionDocumentType::PriceBreakdown, TransactionDocumentType::InsuranceApplication] as $type) {
             $this->assertDatabaseHas('transaction_documents', ['transaction_id' => $transaction->id, 'type' => $type->value]);
@@ -218,6 +220,23 @@ class TransactionDocumentsInsuranceTest extends TestCase
         ]);
 
         $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/disburse", ['reference' => 'TRF-1'])
+            ->assertOk()
+            ->assertJsonPath('data.payouts.0.commission_amount', '1200000.00')
+            ->assertJsonPath('data.payouts.0.payout_amount', '38800000.00');
+    }
+
+    public function test_payout_excludes_registration_fee_held_in_escrow(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+        [, $transaction] = $this->checkoutWithInsurance();
+        $transaction->update([
+            'payment_status' => 'paid',
+            'escrow_status' => 'payout_release',
+            'buyer_confirmed_at' => now(),
+            'seller_confirmed_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/disburse", ['reference' => 'TRF-2'])
             ->assertOk()
             ->assertJsonPath('data.payouts.0.commission_amount', '1200000.00')
             ->assertJsonPath('data.payouts.0.payout_amount', '38800000.00');

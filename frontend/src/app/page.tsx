@@ -2,10 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { API_URL } from "@/lib/api";
-import { formatRupiah } from "@/lib/format";
 import type { Paginated, Vehicle } from "@/lib/types";
 import Badge from "@/components/Badge";
 import DeveloperCredits from "@/components/DeveloperCredits";
+import PromoBanner from "@/components/PromoBanner";
+import PromoPrice from "@/components/PromoPrice";
 
 const FILTER_LABELS: Record<keyof SearchParams, string> = {
   brand: "Merek",
@@ -93,17 +94,18 @@ async function CatalogResults({ searchParams }: { searchParams: SearchParams }) 
                 className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.05]"
               />
             )}
-            <div className="absolute left-2 top-2">
+            <div className="absolute left-2 top-2 flex flex-wrap gap-1.5">
               <Badge tone="success">Terverifikasi Admin</Badge>
+              {vehicle.promo && (
+                <span className="rounded-lg bg-error px-2.5 py-0.5 text-xs font-semibold text-white">{vehicle.promo.badge ?? "Promo"}</span>
+              )}
             </div>
           </div>
           <div className="p-4">
             <h2 className="font-display text-base font-medium text-on-surface">
               {vehicle.brand} {vehicle.model} {vehicle.year}
             </h2>
-            <p className="mt-1 text-lg font-semibold text-primary">
-              {formatRupiah(vehicle.price)}
-            </p>
+            <PromoPrice price={vehicle.price} promo={vehicle.promo} />
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Badge tone="neutral">{vehicle.mileage.toLocaleString("id-ID")} km</Badge>
               <Badge tone="neutral">{vehicle.location}</Badge>
@@ -140,6 +142,8 @@ export default async function CatalogPage({
           Semua listing sudah diverifikasi dokumen STNK/BPKB oleh admin.
         </p>
       </div>
+
+      <PromoBanner />
 
       <form
         method="GET"

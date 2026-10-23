@@ -3,9 +3,14 @@
 namespace App\Escrow;
 
 use App\Enums\EscrowStatus;
+use App\Enums\LoanStatus;
+use App\Enums\PaymentScheme;
+use App\Enums\TransactionDocumentType;
+use App\Enums\TransactionPaymentStatus;
 use App\Enums\TransactionPayoutStatus;
 use App\Enums\VehicleStatus;
 use App\Models\Transaction;
+use App\Models\TransactionDocumentSignature;
 use App\Models\TransactionStatusHistory;
 use App\Models\User;
 
@@ -13,6 +18,10 @@ use App\Models\User;
  * Drives the escrow state machine documented in docs/03-payment-escrow.md:
  * escrow_hold -> serah_terima -> payout_release -> selesai, with an optional
  * dispute branch back to either a resumed state or a refund.
+ *
+ * Serah terima is approval-first: the seller requests it, the admin checks
+ * the checklist and approves (escrow_hold -> serah_terima), and only then
+ * does the seller hand over / dispatch and the buyer confirm receipt.
  *
  * Every transition is written to transaction_status_histories as an
  * append-only audit trail (who triggered it, and when) instead of only
@@ -38,24 +47,106 @@ class EscrowStateMachine
     }
 
     /**
-     * Buyer or seller confirms their side of the physical handover. Does not
-     * transition the escrow state by itself — an admin still has to approve
-     * that transition once both sides have confirmed.
+     * Seller asks the admin for permission to hand over / dispatch the
+     * vehicle. Nothing may leave the seller's hands before that approval.
+     */
+    public function requestHandover(Transaction $transaction, User $seller): void
+    {
+        abort_unless($seller->id === $transaction->seller_id, 403, 'Hanya penjual yang dapat mengajukan serah terima.');
+        abort_unless($transaction->escrow_status === EscrowStatus::EscrowHold, 409, 'Transaksi belum berada di tahap penahanan dana (escrow).');
+        abort_if($transaction->handover_requested_at !== null, 409, 'Pengajuan serah terima sudah dikirim dan sedang menunggu persetujuan admin.');
+
+        $transaction->update(['handover_requested_at' => now()]);
+    }
+
+    /**
+     * Admin approves the escrow_hold -> serah_terima transition. From this
+     * point the seller is allowed to hand over or dispatch the vehicle.
+     */
+    public function approveHandover(Transaction $transaction, User $admin, ?string $note = null): void
+    {
+        abort_unless($transaction->escrow_status === EscrowStatus::EscrowHold, 409, 'Transaksi tidak berada di tahap penahanan dana.');
+
+        $unmet = collect($this->handoverChecklist($transaction))->reject(fn (array $item) => $item['is_met']);
+        abort_if($unmet->isNotEmpty(), 422, 'Syarat serah terima belum terpenuhi: '.$unmet->pluck('label')->implode('; ').'.');
+
+        $transaction->update([
+            'escrow_status' => EscrowStatus::SerahTerima,
+            'handover_approved_at' => now(),
+            'handover_approved_by' => $admin->id,
+        ]);
+
+        $this->recordHistory($transaction, EscrowStatus::EscrowHold, EscrowStatus::SerahTerima, $admin, $note ?? 'Serah terima disetujui — penjual boleh menyerahkan/memberangkatkan kendaraan.');
+    }
+
+    /**
+     * Syarat yang diperiksa admin sebelum mengizinkan serah terima. Dokumen
+     * yang belum pernah terbit (transaksi lama/seed) tidak dijadikan syarat.
+     *
+     * @return array<int, array{key: string, label: string, is_met: bool}>
+     */
+    public function handoverChecklist(Transaction $transaction): array
+    {
+        $transaction->loadMissing(['documents', 'documentSignatures']);
+
+        $items = [
+            [
+                'key' => 'funds_in_escrow',
+                'label' => 'Dana pembeli sudah masuk rekening escrow',
+                'is_met' => $transaction->payment_status === TransactionPaymentStatus::Paid && $transaction->escrow_status !== null,
+            ],
+            [
+                'key' => 'handover_requested',
+                'label' => 'Penjual sudah mengajukan serah terima',
+                'is_met' => $transaction->handover_requested_at !== null,
+            ],
+        ];
+
+        // Kredit: kendaraan baru boleh diserahkan setelah leasing menyetujui dan
+        // melunasi sisa harga ke penjual.
+        if ($transaction->payment_scheme === PaymentScheme::Credit) {
+            $transaction->loadMissing('loan');
+            $items[] = [
+                'key' => 'credit_approved',
+                'label' => 'Kredit disetujui leasing & sisa harga dilunasi ke penjual',
+                'is_met' => in_array($transaction->loan?->status, [LoanStatus::Approved, LoanStatus::PaidOff], true),
+            ];
+        }
+
+        foreach ([TransactionDocumentType::SalesPurchaseAgreement, TransactionDocumentType::SellerOwnershipStatement] as $type) {
+            if (! $transaction->documents->contains('type', $type)) {
+                continue;
+            }
+
+            $items[] = [
+                'key' => 'signed_'.$type->value,
+                'label' => $type->label().' ditandatangani '.$this->signerLabel($type),
+                'is_met' => $this->isFullySigned($transaction, $type),
+            ];
+        }
+
+        return $items;
+    }
+
+    /**
+     * After the admin's approval: the seller confirms the vehicle has been
+     * handed over / dispatched, then the buyer confirms receiving it.
      */
     public function confirmHandover(Transaction $transaction, User $actor): void
     {
-        abort_unless($transaction->escrow_status === EscrowStatus::EscrowHold, 409, 'Transaksi belum berada di tahap penahanan dana (escrow).');
+        abort_unless($transaction->escrow_status === EscrowStatus::SerahTerima, 409, 'Serah terima belum disetujui admin — kendaraan belum boleh diserahkan.');
 
-        if ($actor->id === $transaction->buyer_id) {
-            abort_if($transaction->buyer_confirmed_at !== null, 409, 'Anda sudah mengonfirmasi serah-terima sebelumnya.');
-            $transaction->update(['buyer_confirmed_at' => now()]);
+        if ($actor->id === $transaction->seller_id) {
+            abort_if($transaction->seller_confirmed_at !== null, 409, 'Anda sudah mengonfirmasi penyerahan kendaraan sebelumnya.');
+            $transaction->update(['seller_confirmed_at' => now()]);
 
             return;
         }
 
-        if ($actor->id === $transaction->seller_id) {
-            abort_if($transaction->seller_confirmed_at !== null, 409, 'Anda sudah mengonfirmasi serah-terima sebelumnya.');
-            $transaction->update(['seller_confirmed_at' => now()]);
+        if ($actor->id === $transaction->buyer_id) {
+            abort_if($transaction->seller_confirmed_at === null, 409, 'Penjual belum menyerahkan/memberangkatkan kendaraan.');
+            abort_if($transaction->buyer_confirmed_at !== null, 409, 'Anda sudah mengonfirmasi penerimaan kendaraan sebelumnya.');
+            $transaction->update(['buyer_confirmed_at' => now()]);
 
             return;
         }
@@ -64,26 +155,23 @@ class EscrowStateMachine
     }
 
     /**
-     * Admin approves the escrow_hold -> serah_terima transition once both
-     * buyer and seller have confirmed the handover.
-     */
-    public function approveHandover(Transaction $transaction, User $admin, ?string $note = null): void
-    {
-        abort_unless($transaction->escrow_status === EscrowStatus::EscrowHold, 409, 'Transaksi tidak berada di tahap penahanan dana.');
-        abort_unless($transaction->buyer_confirmed_at && $transaction->seller_confirmed_at, 422, 'Konfirmasi serah-terima dari buyer & seller belum lengkap.');
-
-        $transaction->update(['escrow_status' => EscrowStatus::SerahTerima]);
-
-        $this->recordHistory($transaction, EscrowStatus::EscrowHold, EscrowStatus::SerahTerima, $admin, $note);
-    }
-
-    /**
      * Admin approves releasing the held funds to the seller (the actual
      * disbursement is Epic 4's scope — this only records the approval).
+     * Requires the handover to be confirmed by both parties and the BAST
+     * signed by both.
      */
     public function approvePayoutRelease(Transaction $transaction, User $admin, ?string $note = null): void
     {
         abort_unless($transaction->escrow_status === EscrowStatus::SerahTerima, 409, 'Transaksi belum berada di tahap serah-terima.');
+        abort_unless($transaction->seller_confirmed_at && $transaction->buyer_confirmed_at, 422, 'Kendaraan belum dikonfirmasi diserahkan penjual & diterima pembeli.');
+
+        $transaction->loadMissing(['documents', 'documentSignatures']);
+        $bast = TransactionDocumentType::HandoverMinutes;
+        abort_if(
+            $transaction->documents->contains('type', $bast) && ! $this->isFullySigned($transaction, $bast),
+            422,
+            $bast->label().' belum ditandatangani penjual & pembeli.',
+        );
 
         $transaction->update(['escrow_status' => EscrowStatus::PayoutRelease]);
 
@@ -166,6 +254,27 @@ class EscrowStateMachine
         ]);
 
         $this->recordHistory($transaction, EscrowStatus::Dispute, $target, $admin, $note);
+    }
+
+    private function isFullySigned(Transaction $transaction, TransactionDocumentType $type): bool
+    {
+        foreach ($type->requiredSigners() as $role) {
+            $signed = $transaction->documentSignatures
+                ->contains(fn (TransactionDocumentSignature $signature) => $signature->document_type === $type && $signature->role === $role);
+
+            if (! $signed) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function signerLabel(TransactionDocumentType $type): string
+    {
+        return collect($type->requiredSigners())
+            ->map(fn (string $role) => $role === 'seller' ? 'penjual' : 'pembeli')
+            ->implode(' & ');
     }
 
     private function recordHistory(Transaction $transaction, ?EscrowStatus $from, EscrowStatus $to, ?User $actor, ?string $note): void

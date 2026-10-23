@@ -6,4 +6,5 @@ enum PaymentScheme: string
 {
     case DownPayment = 'down_payment';
     case Full = 'full';
+    case Credit = 'credit';
 }

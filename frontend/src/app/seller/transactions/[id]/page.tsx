@@ -14,6 +14,8 @@ import ShipmentInitForm from "@/components/ShipmentInitForm";
 import SigningCenter from "@/components/SigningCenter";
 import PriceBreakdownPanel from "@/components/PriceBreakdownPanel";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
+import HandoverProgress from "@/components/HandoverProgress";
+import CreditPanel from "@/components/CreditPanel";
 
 export default function SellerTransactionDetailPage({
   params,
@@ -28,6 +30,7 @@ export default function SellerTransactionDetailPage({
   const [disputeReason, setDisputeReason] = useState("");
   const [showDisputeForm, setShowDisputeForm] = useState(false);
   const [showConfirmHandover, setShowConfirmHandover] = useState(false);
+  const [showRequestHandover, setShowRequestHandover] = useState(false);
 
   async function loadTransaction() {
     try {
@@ -45,6 +48,23 @@ export default function SellerTransactionDetailPage({
     loadTransaction();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  async function handleRequestHandover() {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const { data } = await apiFetch<{ data: Transaction }>(
+        `/api/seller/transactions/${id}/request-handover`,
+        { method: "POST" }
+      );
+      setTransaction(data);
+      setShowRequestHandover(false);
+    } catch (err) {
+      if (err instanceof ApiError) setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   async function handleConfirmHandover() {
     setIsSubmitting(true);
@@ -94,7 +114,13 @@ export default function SellerTransactionDetailPage({
     return <p className="text-sm text-error">Transaksi tidak ditemukan.</p>;
   }
 
-  const canConfirmHandover = transaction.escrow_status === "escrow_hold" && !transaction.seller_confirmed_at;
+  const canRequestHandover = transaction.escrow_status === "escrow_hold" && !transaction.handover_requested_at;
+  const isAwaitingApproval = transaction.escrow_status === "escrow_hold" && !!transaction.handover_requested_at;
+  // Kendaraan baru boleh diserahkan setelah admin menyetujui (status serah_terima).
+  const canConfirmHandover = transaction.escrow_status === "serah_terima" && !transaction.seller_confirmed_at;
+  const unmetHandoverItems = (transaction.handover_checklist ?? []).filter(
+    (item) => !item.is_met && item.key !== "handover_requested"
+  );
   const canDispute = transaction.escrow_status === "escrow_hold" || transaction.escrow_status === "serah_terima";
 
   return (
@@ -145,8 +171,35 @@ export default function SellerTransactionDetailPage({
 
         {error && <p className="mt-3 text-sm text-error">{error}</p>}
 
-        {(canConfirmHandover || canDispute) && (
+        {(canRequestHandover || isAwaitingApproval) && unmetHandoverItems.length > 0 && (
+          <div className="mt-6 rounded-md border border-warning/40 bg-warning/5 p-3 text-xs text-on-surface-muted">
+            <p className="font-semibold text-warning">Lengkapi dulu sebelum admin bisa menyetujui serah terima:</p>
+            <ul className="mt-1 list-disc pl-4">
+              {unmetHandoverItems.map((item) => (
+                <li key={item.key}>{item.label}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {isAwaitingApproval && transaction.handover_requested_at && (
+          <p className="mt-4 rounded-md border border-border bg-surface-container-high px-3 py-2 text-xs text-on-surface-muted">
+            Pengajuan serah terima dikirim {formatDate(transaction.handover_requested_at)}. Tunggu persetujuan admin
+            sebelum menyerahkan atau memberangkatkan kendaraan.
+          </p>
+        )}
+
+        {(canRequestHandover || canConfirmHandover || canDispute) && (
           <div className="mt-6 flex flex-wrap gap-3 border-t border-border pt-4">
+            {canRequestHandover && (
+              <button
+                onClick={() => setShowRequestHandover(true)}
+                disabled={isSubmitting}
+                className="btn-gold rounded-md px-4 py-2 text-sm font-medium disabled:opacity-60"
+              >
+                Ajukan Serah Terima ke Admin
+              </button>
+            )}
             {canConfirmHandover && (
               <button
                 onClick={() => setShowConfirmHandover(true)}
@@ -206,6 +259,18 @@ export default function SellerTransactionDetailPage({
         )}
       </div>
 
+      {transaction.payment_status === "paid" && (
+        <div className="mt-6">
+          <HandoverProgress transaction={transaction} perspective="seller" />
+        </div>
+      )}
+
+      {transaction.loan && (
+        <div className="mt-6">
+          <CreditPanel loan={transaction.loan} perspective="seller" onRefresh={loadTransaction} />
+        </div>
+      )}
+
       {transaction.signing_checklist && transaction.signing_checklist.length > 0 && (
         <div className="mt-6">
           <SigningCenter
@@ -239,9 +304,9 @@ export default function SellerTransactionDetailPage({
             userRole="seller"
             onUpdate={loadTransaction}
           />
-        ) : (
+        ) : transaction.handover_approved_at ? (
           <ShipmentInitForm transactionId={transaction.id} onUpdate={loadTransaction} />
-        )}
+        ) : null}
       </div>
 
       {transaction.status_history && transaction.status_history.length > 0 && (
@@ -251,6 +316,29 @@ export default function SellerTransactionDetailPage({
             <TransactionStatusHistory entries={transaction.status_history} />
           </div>
         </div>
+      )}
+
+      {showRequestHandover && (
+        <DangerConfirmModal
+          title="Ajukan Serah Terima"
+          intro={
+            <>
+              Kamu akan meminta izin admin untuk menyerahkan{" "}
+              <strong className="text-on-surface">{transaction.vehicle.brand} {transaction.vehicle.model}</strong>{" "}
+              kepada pembeli. Kendaraan belum boleh diserahkan atau diberangkatkan sebelum admin menyetujui.
+            </>
+          }
+          consequences={[
+            "Admin memeriksa dana escrow dan tanda tangan Perjanjian Jual Beli & Surat Pernyataan Keabsahan.",
+            "Pengajuan hanya bisa dikirim satu kali per transaksi.",
+            "Setelah disetujui, kamu bisa menandai kendaraan sudah diserahkan dan memulai pengiriman.",
+          ]}
+          confirmWord="AJUKAN"
+          confirmLabel="Ya, Ajukan Serah Terima"
+          isSubmitting={isSubmitting}
+          onConfirm={handleRequestHandover}
+          onCancel={() => setShowRequestHandover(false)}
+        />
       )}
 
       {showConfirmHandover && (
@@ -265,7 +353,7 @@ export default function SellerTransactionDetailPage({
           }
           consequences={[
             "Buyer akan diminta mengkonfirmasi penerimaan kendaraan.",
-            "Setelah dikonfirmasi buyer & admin, dana escrow dilepas ke rekening bank kamu.",
+            "Setelah buyer menerima dan BAST ditandatangani kedua pihak, admin melepas dana escrow ke rekening bank kamu.",
             "Klaim serah-terima palsu dapat menyebabkan akun kamu di-suspend.",
           ]}
           confirmWord="SERAHKAN"

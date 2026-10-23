@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Documents\DocumentSigning;
+use App\Escrow\EscrowStateMachine;
 use App\Models\Transaction;
 use App\Support\PriceBreakdownCalculator;
 use Illuminate\Http\Request;
@@ -39,6 +40,7 @@ class TransactionResource extends JsonResource
             'insurance_premium' => $this->insurance_premium,
             'insurance_addons' => $this->insurance_addons ?? [],
             'insurance_policy_number' => $this->insurance_policy_number,
+            'promo_code' => $this->promo_code,
             'buyer_address' => $this->buyer_address,
             'buyer_phone' => $this->buyer_phone,
             'buyer_notes' => $this->buyer_notes,
@@ -58,6 +60,8 @@ class TransactionResource extends JsonResource
             'paid_at' => $this->paid_at,
             'expires_at' => $this->expires_at,
             'escrow_status' => $this->escrow_status,
+            'handover_requested_at' => $this->handover_requested_at,
+            'handover_approved_at' => $this->handover_approved_at,
             'buyer_confirmed_at' => $this->buyer_confirmed_at,
             'seller_confirmed_at' => $this->seller_confirmed_at,
             'dispute_reason' => $this->dispute_reason,
@@ -75,7 +79,9 @@ class TransactionResource extends JsonResource
             // Rincian harga & checklist tanda tangan hanya untuk endpoint detail (yang memuat documents).
             'price_breakdown' => $this->whenLoaded('documents', fn () => app(PriceBreakdownCalculator::class)->forTransaction($this->resource)),
             'signing_checklist' => $this->whenLoaded('documents', fn () => app(DocumentSigning::class)->checklist($this->resource)),
+            'handover_checklist' => $this->whenLoaded('documents', fn () => app(EscrowStateMachine::class)->handoverChecklist($this->resource)),
             'shipment' => $this->whenLoaded('shipment', fn () => $this->shipment ? new ShipmentResource($this->shipment) : null),
+            'loan' => $this->whenLoaded('loan', fn () => $this->loan ? new VehicleLoanResource($this->loan) : null),
             'created_at' => $this->created_at,
         ];
     }

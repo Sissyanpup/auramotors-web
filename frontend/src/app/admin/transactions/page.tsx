@@ -14,6 +14,9 @@ import SigningCenter from "@/components/SigningCenter";
 import ShipmentPanel from "@/components/ShipmentPanel";
 import ConfirmModal from "@/components/ConfirmModal";
 import DangerConfirmModal from "@/components/DangerConfirmModal";
+import HandoverProgress from "@/components/HandoverProgress";
+import CreditPanel from "@/components/CreditPanel";
+import TransactionActivityTimeline from "@/components/TransactionActivityTimeline";
 
 const FILTERS: { value: string; label: string }[] = [
   { value: "", label: "Semua" },
@@ -148,6 +151,11 @@ export default function AdminTransactionsPage() {
                   <PaymentStatusBadge status={transaction.payment_status} />
                   {transaction.escrow_status && <EscrowStatusBadge status={transaction.escrow_status} />}
                   {transaction.payout_status && <PayoutStatusBadge status={transaction.payout_status} />}
+                  {transaction.escrow_status === "escrow_hold" && transaction.handover_requested_at && (
+                    <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning">
+                      Pengajuan serah terima
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -161,6 +169,26 @@ export default function AdminTransactionsPage() {
                     <p className="text-on-surface-muted">Memuat detail...</p>
                   ) : (
                     <div className="flex flex-col gap-4">
+                      <HandoverProgress transaction={detail} perspective="admin" />
+
+                      {detail.loan && <CreditPanel loan={detail.loan} perspective="admin" onRefresh={() => refreshDetail(detail.id)} />}
+
+                      {detail.escrow_status === "escrow_hold" && detail.handover_checklist && (
+                        <div>
+                          <p className="mb-2 text-xs font-semibold uppercase text-on-surface-muted">Syarat Serah Terima</p>
+                          <ul className="space-y-1">
+                            {detail.handover_checklist.map((item) => (
+                              <li key={item.key} className="flex items-start gap-2">
+                                <span aria-hidden className={item.is_met ? "text-emerald-500" : "text-error"}>
+                                  {item.is_met ? "✓" : "✗"}
+                                </span>
+                                <span className={item.is_met ? "text-on-surface" : "text-on-surface-muted"}>{item.label}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
                       <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                           <dt className="text-xs uppercase text-on-surface-muted">Buyer Konfirmasi Terima</dt>
@@ -193,16 +221,21 @@ export default function AdminTransactionsPage() {
                       </dl>
 
                       <div className="flex flex-wrap gap-2">
-                        {detail.escrow_status === "escrow_hold" && (
+                        {detail.escrow_status === "escrow_hold" && detail.handover_requested_at && (
                           <button
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || !(detail.handover_checklist ?? []).every((item) => item.is_met)}
+                            title={
+                              (detail.handover_checklist ?? []).every((item) => item.is_met)
+                                ? undefined
+                                : "Masih ada syarat serah terima yang belum terpenuhi"
+                            }
                             onClick={() => setPendingAction({ type: "approve-handover", id: detail.id })}
                             className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-60"
                           >
                             Setujui Serah Terima
                           </button>
                         )}
-                        {detail.escrow_status === "serah_terima" && (
+                        {detail.escrow_status === "serah_terima" && detail.seller_confirmed_at && detail.buyer_confirmed_at && (
                           <button
                             disabled={isSubmitting}
                             onClick={() => setPendingAction({ type: "approve-payout", id: detail.id })}
@@ -285,6 +318,8 @@ export default function AdminTransactionsPage() {
                           <TransactionStatusHistory entries={detail.status_history} />
                         </div>
                       )}
+
+                      <TransactionActivityTimeline transactionId={detail.id} refreshKey={detail} />
                     </div>
                   )}
                 </div>
@@ -297,7 +332,7 @@ export default function AdminTransactionsPage() {
       {pendingAction?.type === "approve-handover" && (
         <ConfirmModal
           title="Setujui Serah Terima"
-          message="Setujui transisi ke status serah-terima?"
+          message="Setelah disetujui, penjual boleh menyerahkan atau memberangkatkan kendaraan ke pembeli. Pastikan semua syarat sudah dicek."
           fields={[{ name: "note", label: "Catatan (opsional)" }]}
           isSubmitting={isSubmitting}
           onConfirm={(values) => runAction(pendingAction, values)}

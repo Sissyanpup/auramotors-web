@@ -4,7 +4,7 @@ import { use, useEffect, useMemo, useState, type FormEvent, type ReactNode } fro
 import Link from "next/link";
 import { ApiError, apiFetch } from "@/lib/api";
 import { formatRupiah } from "@/lib/format";
-import type { Transaction } from "@/lib/types";
+import type { LoanInstallment, Transaction, VehicleLoan } from "@/lib/types";
 
 /*
  * Portal bank SIMULASI (proyek offline, tugas kuliah). Sengaja berdiri sendiri
@@ -14,7 +14,12 @@ import type { Transaction } from "@/lib/types";
  * Semua angka acak diterima: nomor kartu 12–19 digit, MM/YY, CVV 3–4 digit,
  * OTP 6 digit apa saja. Nomor kartu & CVV tidak pernah disimpan backend —
  * hanya brand + 4 digit terakhir untuk Bukti Pembayaran.
+ *
+ * Mode angsuran (?installment={id}): portal yang sama dipakai pembeli untuk
+ * membayar cicilan kredit ke leasing.
  */
+
+type InstallmentInfo = { installment: LoanInstallment; loan: VehicleLoan; is_next_payable: boolean };
 
 type Method = "card" | "paypal" | "virtual_account";
 type Step = "method" | "details" | "otp" | "processing" | "success";
@@ -33,6 +38,13 @@ const PROCESSING_STEPS = [
   "Memverifikasi kode OTP…",
   "Menempatkan dana di rekening escrow…",
   "Menerbitkan bukti pembayaran & surat bank…",
+];
+
+const INSTALLMENT_PROCESSING_STEPS = [
+  "Menghubungi bank penerbit…",
+  "Memverifikasi kode OTP…",
+  "Meneruskan pembayaran ke leasing…",
+  "Mencatat angsuran & menerbitkan bukti bayar…",
 ];
 
 function digitsOnly(value: string): string {
@@ -55,8 +67,18 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export default function BankPortalPage({ params }: { params: Promise<{ reference: string }> }) {
+export default function BankPortalPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ reference: string }>;
+  searchParams: Promise<{ installment?: string }>;
+}) {
   const { reference } = use(params);
+  const { installment: installmentParam } = use(searchParams);
+  const installmentId = installmentParam ? Number(installmentParam) : null;
+  const [installmentInfo, setInstallmentInfo] = useState<InstallmentInfo | null>(null);
+  const processingSteps = installmentId ? INSTALLMENT_PROCESSING_STEPS : PROCESSING_STEPS;
 
   const [transaction, setTransaction] = useState<Transaction | null>(null);
   const [loadError, setLoadError] = useState<{ status: number; message: string } | null>(null);
@@ -75,10 +97,16 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
   const [processingIndex, setProcessingIndex] = useState(0);
 
   useEffect(() => {
-    apiFetch<{ data: Transaction }>(`/api/payments/mock/${reference}`)
-      .then(({ data }) => {
+    const loadInstallment = installmentId
+      ? apiFetch<{ data: InstallmentInfo }>(`/api/buyer/installments/${installmentId}`).then(({ data }) => data)
+      : Promise.resolve(null);
+
+    Promise.all([apiFetch<{ data: Transaction }>(`/api/payments/mock/${reference}`), loadInstallment])
+      .then(([{ data }, info]) => {
         setTransaction(data);
-        if (data.payment_status === "paid") setStep("success");
+        setInstallmentInfo(info);
+        const alreadyPaid = info ? info.installment.status === "paid" : data.payment_status === "paid";
+        if (alreadyPaid) setStep("success");
       })
       .catch((err) => {
         setLoadError({
@@ -86,7 +114,7 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
           message: err instanceof ApiError ? err.message : "Gagal memuat tagihan.",
         });
       });
-  }, [reference]);
+  }, [reference, installmentId]);
 
   useEffect(() => {
     if (step !== "otp" || otpSecondsLeft <= 0) return;
@@ -96,9 +124,9 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
 
   useEffect(() => {
     if (step !== "processing") return;
-    const timer = setInterval(() => setProcessingIndex((i) => Math.min(i + 1, PROCESSING_STEPS.length - 1)), 700);
+    const timer = setInterval(() => setProcessingIndex((i) => Math.min(i + 1, processingSteps.length - 1)), 700);
     return () => clearInterval(timer);
-  }, [step]);
+  }, [step, processingSteps.length]);
 
   const cardDigits = digitsOnly(card.number);
   const brand = detectBrand(cardDigits);
@@ -166,11 +194,19 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
 
     try {
       // Jeda minimal supaya terasa seperti otorisasi bank sungguhan.
-      const [{ data }] = await Promise.all([
-        apiFetch<{ data: Transaction }>(`/api/payments/mock/${reference}/pay`, { method: "POST", body: payload }),
-        sleep(2800),
-      ]);
-      setTransaction(data);
+      if (installmentInfo) {
+        const [{ data }] = await Promise.all([
+          apiFetch<{ data: LoanInstallment }>(`/api/buyer/installments/${installmentInfo.installment.id}/pay`, { method: "POST", body: payload }),
+          sleep(2800),
+        ]);
+        setInstallmentInfo({ ...installmentInfo, installment: data });
+      } else {
+        const [{ data }] = await Promise.all([
+          apiFetch<{ data: Transaction }>(`/api/payments/mock/${reference}/pay`, { method: "POST", body: payload }),
+          sleep(2800),
+        ]);
+        setTransaction(data);
+      }
       setStep("success");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Transaksi ditolak oleh sistem bank simulasi.");
@@ -194,7 +230,7 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
     );
   }
 
-  if (!transaction) {
+  if (!transaction || (installmentId && !installmentInfo)) {
     return (
       <PortalShell>
         <div className="flex items-center justify-center gap-3 py-24 text-sm text-slate-500">
@@ -205,11 +241,25 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
   }
 
   const breakdown = transaction.price_breakdown;
-  const amount = Number(transaction.amount);
-  const isClosed = transaction.payment_status !== "pending" && transaction.payment_status !== "paid";
+  const paidInstallment = installmentInfo?.installment.status === "paid";
+  const amount = installmentInfo
+    ? Number(paidInstallment ? installmentInfo.installment.paid_amount : installmentInfo.installment.amount_due)
+    : Number(transaction.amount);
+  const isClosed = installmentInfo
+    ? !paidInstallment && (installmentInfo.loan.status !== "approved" || !installmentInfo.is_next_payable)
+    : transaction.payment_status !== "pending" && transaction.payment_status !== "paid";
+  const summaryLines = installmentInfo
+    ? [
+        { label: `Angsuran ke-${installmentInfo.installment.sequence} — pokok`, amount: Number(installmentInfo.installment.principal_amount) },
+        { label: "Bunga", amount: Number(installmentInfo.installment.interest_amount) },
+        ...(installmentInfo.installment.late_fee > 0
+          ? [{ label: `Denda ${installmentInfo.installment.days_late} hari`, amount: installmentInfo.installment.late_fee }]
+          : []),
+      ]
+    : breakdown?.due_now.lines ?? [];
 
   return (
-    <PortalShell expiresAt={step !== "success" ? transaction.expires_at : null}>
+    <PortalShell expiresAt={step !== "success" && !installmentInfo ? transaction.expires_at : null}>
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="rounded-[14px] border border-slate-200 bg-white shadow-sm">
           {step !== "success" && step !== "processing" && !isClosed && (
@@ -220,7 +270,13 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
             {isClosed && (
               <div className="text-center">
                 <p className="text-lg font-semibold text-slate-900">Tagihan tidak dapat dibayar</p>
-                <p className="mt-2 text-sm text-slate-500">Status tagihan: {transaction.payment_status}. Buat pesanan baru dari halaman kendaraan.</p>
+                <p className="mt-2 text-sm text-slate-500">
+                  {installmentInfo
+                    ? installmentInfo.loan.status !== "approved"
+                      ? "Kredit belum disetujui atau sudah lunas."
+                      : "Angsuran harus dibayar berurutan — lunasi angsuran sebelumnya terlebih dahulu."
+                    : `Status tagihan: ${transaction.payment_status}. Buat pesanan baru dari halaman kendaraan.`}
+                </p>
                 <Link href="/buyer/transactions" className="mt-6 inline-block text-sm font-semibold text-blue-700 hover:underline">
                   Kembali ke AuraMotors
                 </Link>
@@ -230,7 +286,11 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
             {!isClosed && step === "method" && (
               <div>
                 <h1 style={SANS} className="text-xl font-semibold text-slate-900">Pilih metode pembayaran</h1>
-                <p className="mt-1 text-sm text-slate-500">Dana Anda ditahan di rekening escrow sampai kendaraan diterima.</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  {installmentInfo
+                    ? `Pembayaran angsuran diteruskan ke ${installmentInfo.loan.lender_name}.`
+                    : "Dana Anda ditahan di rekening escrow sampai kendaraan diterima."}
+                </p>
                 <div className="mt-6 space-y-3">
                   <MethodOption
                     active={method === "card"}
@@ -469,20 +529,31 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
               <div className="flex flex-col items-center py-12 text-center">
                 <Spinner large />
                 <p className="mt-6 text-base font-semibold text-slate-900">Memproses pembayaran</p>
-                <p className="mt-1 text-sm text-slate-500">{PROCESSING_STEPS[processingIndex]}</p>
+                <p className="mt-1 text-sm text-slate-500">{processingSteps[processingIndex]}</p>
                 <p className="mt-6 text-xs text-slate-400">Jangan tutup atau muat ulang halaman ini.</p>
               </div>
             )}
 
-            {step === "success" && <SuccessView transaction={transaction} />}
+            {step === "success" &&
+              (installmentInfo ? (
+                <InstallmentSuccessView transaction={transaction} info={installmentInfo} />
+              ) : (
+                <SuccessView transaction={transaction} />
+              ))}
           </div>
         </div>
 
         <aside className="lg:sticky lg:top-6 lg:self-start">
           <div className="rounded-[14px] border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Ringkasan tagihan</p>
-            <p className="mt-3 text-sm font-medium text-slate-900">PT AuraMotors Escrow Indonesia</p>
-            <p className="text-xs text-slate-500">Invoice {transaction.invoice_number}</p>
+            <p className="mt-3 text-sm font-medium text-slate-900">
+              {installmentInfo ? installmentInfo.loan.lender_name : "PT AuraMotors Escrow Indonesia"}
+            </p>
+            <p className="text-xs text-slate-500">
+              {installmentInfo
+                ? `Kontrak ${installmentInfo.loan.contract_number} · jatuh tempo ${new Date(installmentInfo.installment.due_date).toLocaleDateString("id-ID")}`
+                : `Invoice ${transaction.invoice_number}`}
+            </p>
             <div className="mt-4 rounded-[10px] bg-slate-50 p-3">
               <p className="text-sm font-medium text-slate-900">
                 {transaction.vehicle.brand} {transaction.vehicle.model} {transaction.vehicle.year}
@@ -490,7 +561,7 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
               <p className="text-xs text-slate-500">Penjual: {transaction.seller?.name ?? "-"}</p>
             </div>
             <dl className="mt-4 space-y-2 text-sm">
-              {(breakdown?.due_now.lines ?? []).map((line) => (
+              {summaryLines.map((line) => (
                 <div key={line.label} className="flex justify-between gap-3">
                   <dt className="text-slate-500">{line.label}</dt>
                   <dd className="whitespace-nowrap text-slate-900">{formatRupiah(line.amount)}</dd>
@@ -502,8 +573,9 @@ export default function BankPortalPage({ params }: { params: Promise<{ reference
               </div>
             </dl>
             <p className="mt-4 text-xs leading-relaxed text-slate-400">
-              Dana ditahan di rekening escrow {transaction.bank_transfer_bank} {transaction.bank_transfer_account_number} dan baru
-              diteruskan ke penjual setelah serah terima terkonfirmasi.
+              {installmentInfo
+                ? "Angsuran dibayar langsung ke leasing. Keterlambatan dikenai denda harian sesuai perjanjian pembiayaan."
+                : `Dana ditahan di rekening escrow ${transaction.bank_transfer_bank} ${transaction.bank_transfer_account_number} dan baru diteruskan ke penjual setelah serah terima terkonfirmasi.`}
             </p>
           </div>
         </aside>
@@ -703,6 +775,48 @@ function SuccessView({ transaction }: { transaction: Transaction }) {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function InstallmentSuccessView({ transaction, info }: { transaction: Transaction; info: InstallmentInfo }) {
+  const { installment, loan } = info;
+  const methodLabel =
+    installment.payment_method === "card" ? "Kartu kredit/debit"
+      : installment.payment_method === "paypal" ? "PayPal"
+        : installment.payment_method === "virtual_account" ? "Virtual Account"
+          : installment.payment_method === "manual" ? "Setoran manual"
+            : "Simulasi";
+
+  return (
+    <div className="text-center">
+      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-600">✓</span>
+      <h1 style={SANS} className="mt-4 text-2xl font-semibold text-slate-900">Angsuran Berhasil Dibayar</h1>
+      <p className="mt-1 text-sm text-slate-500">
+        Angsuran ke-{installment.sequence} dari {loan.tenor_months} untuk kontrak {loan.contract_number} sudah tercatat di {loan.lender_name}.
+      </p>
+      <p className="mt-4 text-3xl font-bold text-slate-900">{formatRupiah(installment.paid_amount ?? installment.amount)}</p>
+
+      <dl className="mx-auto mt-6 max-w-md divide-y divide-slate-100 rounded-[12px] border border-slate-200 text-left text-sm">
+        {[
+          ["Kode otorisasi", installment.payment_approval_code ?? "-"],
+          ["Metode", `${methodLabel}${installment.payment_channel ? ` · ${installment.payment_channel}` : ""}`],
+          ["Sumber dana", installment.payment_account_masked ?? "-"],
+          ["Denda keterlambatan", installment.late_fee > 0 ? formatRupiah(installment.late_fee) : "Tidak ada"],
+          ["Waktu", installment.paid_at ? new Date(installment.paid_at).toLocaleString("id-ID") : "-"],
+        ].map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-4 px-4 py-2.5">
+            <dt className="text-slate-500">{label}</dt>
+            <dd className="text-right font-medium text-slate-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <div className="mx-auto mt-6 max-w-md">
+        <Link href={`/buyer/transactions/${transaction.id}`} className="block rounded-[10px] bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">
+          Kembali ke jadwal angsuran
+        </Link>
+      </div>
     </div>
   );
 }

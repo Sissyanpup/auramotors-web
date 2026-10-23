@@ -47,8 +47,10 @@ Setiap transisi state sebaiknya:
 **Implementasi (Epic 3, Sprint 3)**: state machine di atas diimplementasikan di `App\Escrow\EscrowStateMachine` (backend), satu-satunya tempat yang boleh mengubah `transactions.escrow_status`. Setiap transisi ditulis sebagai baris baru di tabel `transaction_status_histories` (from/to status, actor, catatan, timestamp) — bukan overwrite. Alurnya:
 
 1. Pembayaran jadi Lunas (via mock/webhook/polling) → sistem otomatis pindah ke `escrow_hold` + vehicle jadi `sold`.
-2. Buyer & seller masing-masing konfirmasi serah-terima lewat endpoint sendiri (`confirm-handover`) — ini baru catatan, bukan transisi state.
-3. Admin approve transisi `escrow_hold → serah_terima` (setelah kedua pihak konfirmasi), lalu `serah_terima → payout_release`, lalu `payout_release → selesai` — tiga endpoint approval terpisah di dashboard admin (`/admin/transactions`), tiap approval tercatat siapa & kapan.
+2. Seller mengajukan serah terima (`request-handover`). Kendaraan **belum boleh** diserahkan atau dikirim (revisi dosen 16 Okt 2026).
+3. Admin memeriksa syarat (dana di escrow, SPA ditandatangani kedua pihak, Surat Pernyataan Keabsahan ditandatangani seller), lalu menyetujui transisi `escrow_hold → serah_terima`. Inisiasi shipment juga baru terbuka setelah persetujuan ini.
+4. Seller menandai kendaraan sudah diserahkan/diberangkatkan (`confirm-handover`), lalu buyer mengonfirmasi penerimaan. Bill of Sale terbit saat buyer mengonfirmasi.
+5. Admin approve `serah_terima → payout_release` (butuh konfirmasi kedua pihak + BAST ditandatangani keduanya), lalu `payout_release → selesai`. Tiap approval tercatat siapa & kapan.
 4. Buyer/seller bisa membuka dispute selama `escrow_hold`/`serah_terima` → escrow_status jadi `dispute` (state sebelumnya disimpan). Admin resolve lewat refund (vehicle balik ke `approved`) atau lanjutkan (kembali ke state sebelum dispute).
 
 ## 5. Driver Payment Gateway & Kendala Offline Kelas

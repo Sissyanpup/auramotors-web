@@ -3,9 +3,7 @@
 namespace Tests\Feature;
 
 use App\Documents\DocumentGenerator;
-use App\Enums\EscrowStatus;
 use App\Enums\TransactionDocumentType;
-use App\Enums\TransactionPaymentStatus;
 use App\Enums\UserRole;
 use App\Models\Transaction;
 use App\Models\User;
@@ -71,9 +69,8 @@ class DocumentGeneratorTest extends TestCase
         ]);
     }
 
-    public function test_bill_of_sale_generated_on_admin_approve_handover(): void
+    public function test_bill_of_sale_generated_when_buyer_confirms_receipt(): void
     {
-        $admin = User::factory()->create(['role' => UserRole::Admin]);
         $seller = User::factory()->create(['role' => UserRole::Seller]);
         $buyer = User::factory()->create([
             'role' => UserRole::Buyer,
@@ -82,20 +79,21 @@ class DocumentGeneratorTest extends TestCase
         ]);
         $vehicle = Vehicle::factory()->approved()->create(['seller_id' => $seller->id, 'price' => 100_000_000]);
 
-        $transaction = Transaction::factory()->for($vehicle)->create([
+        $transaction = Transaction::factory()->handoverApproved()->for($vehicle)->create([
             'buyer_id' => $buyer->id,
             'seller_id' => $seller->id,
-            'payment_status' => TransactionPaymentStatus::Paid,
-            'escrow_status' => EscrowStatus::EscrowHold,
-            'buyer_confirmed_at' => now(),
-            'seller_confirmed_at' => now(),
             'amount' => 100_000_000,
             'vehicle_price' => 100_000_000,
         ]);
 
-        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover", [
-            'note' => 'Serah-terima OK',
-        ])->assertOk();
+        $this->actingAs($seller)->postJson("/api/seller/transactions/{$transaction->id}/confirm-handover")->assertOk();
+
+        $this->assertDatabaseMissing('transaction_documents', [
+            'transaction_id' => $transaction->id,
+            'type' => TransactionDocumentType::BillOfSale->value,
+        ]);
+
+        $this->actingAs($buyer)->postJson("/api/buyer/transactions/{$transaction->id}/confirm-handover")->assertOk();
 
         $this->assertDatabaseHas('transaction_documents', [
             'transaction_id' => $transaction->id,

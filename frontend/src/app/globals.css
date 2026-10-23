@@ -283,3 +283,16 @@ h1, h2, h3, h4 {
     transition-duration:       0.01ms !important;
   }
 }
+
+/* Cetak laporan admin: sembunyikan navigasi, tampilkan hanya isi laporan. */
+@media print {
+  body > header,
+  header.sticky,
+  nav[aria-label="Menu admin"] {
+    display: none !important;
+  }
+
+  .report-page details {
+    display: none;
+  }
+}

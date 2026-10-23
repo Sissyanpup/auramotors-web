@@ -2,25 +2,25 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { apiFetch } from "@/lib/api";
+import { formatDate } from "@/lib/format";
 import type { BuyerProfile, Paginated } from "@/lib/types";
-import StatusBadge from "@/components/StatusBadge";
 import ConfirmModal from "@/components/ConfirmModal";
+import { Pager, ReviewCell, VerificationFilterBar } from "@/components/VerificationParts";
 
 type PendingAction = { type: "approve" | "reject"; id: number };
-type StatusFilter = "pending" | "approved" | "rejected" | "all";
 
-const FILTERS: { key: StatusFilter; label: string }[] = [
-  { key: "pending", label: "Pending" },
+const FILTERS = [
+  { key: "all", label: "Semua" },
+  { key: "pending", label: "Menunggu" },
   { key: "approved", label: "Disetujui" },
   { key: "rejected", label: "Ditolak" },
-  { key: "all", label: "Semua" },
 ];
 
 export default function AdminBuyerKycPage() {
-  const [profiles, setProfiles] = useState<BuyerProfile[]>([]);
+  const [result, setResult] = useState<Paginated<BuyerProfile> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("pending");
-  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
@@ -28,16 +28,13 @@ export default function AdminBuyerKycPage() {
   const loadProfiles = useCallback(async () => {
     setIsLoading(true);
     try {
-      const { data } = await apiFetch<Paginated<BuyerProfile>>(
-        `/api/admin/buyer-kyc?status=${statusFilter}`
-      );
-      setProfiles(data);
+      setResult(await apiFetch<Paginated<BuyerProfile>>(`/api/admin/buyer-kyc?status=${statusFilter}&page=${page}`));
     } catch {
-      setActionError("Gagal memuat daftar KYC buyer.");
+      setActionError("Gagal memuat daftar KYC pembeli.");
     } finally {
       setIsLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, page]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- data fetch on filter change
@@ -68,138 +65,115 @@ export default function AdminBuyerKycPage() {
     }
   }
 
+  const profiles = result?.data ?? [];
+
   return (
     <div>
-      <h1 className="text-xl font-semibold text-on-surface">Review KYC Buyer</h1>
+      <h1 className="text-xl font-semibold text-on-surface">Verifikasi KYC Pembeli</h1>
+      <p className="mt-1 text-sm text-on-surface-muted">Semua pengajuan ditampilkan, termasuk yang sudah disetujui atau ditolak.</p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {FILTERS.map((filter) => (
-          <button
-            key={filter.key}
-            onClick={() => setStatusFilter(filter.key)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              statusFilter === filter.key
-                ? "bg-primary-container text-on-primary"
-                : "border border-border bg-surface-container text-on-surface-muted hover:text-on-surface"
-            }`}
-          >
-            {filter.label}
-          </button>
-        ))}
-      </div>
+      <VerificationFilterBar
+        filters={FILTERS}
+        active={statusFilter}
+        onChange={(key) => {
+          setStatusFilter(key);
+          setPage(1);
+        }}
+      />
 
       {actionError && <p className="mt-3 text-sm text-error">{actionError}</p>}
 
-      {isLoading ? (
-        <p className="mt-6 text-sm text-on-surface-muted">Memuat...</p>
-      ) : profiles.length === 0 ? (
-        <p className="mt-6 text-sm text-on-surface-muted">
-          Tidak ada pengajuan KYC buyer pada filter ini.
-        </p>
-      ) : (
-        <div className="mt-6 space-y-4">
-          {profiles.map((profile) => {
-            const isExpanded = expandedId === profile.id;
-            return (
-              <div key={profile.id} className="rounded-lg border border-border bg-surface-container p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-on-surface">{profile.user?.name}</p>
-                    <p className="text-sm text-on-surface-muted">{profile.user?.email}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <StatusBadge status={profile.status} />
-                    <button
-                      onClick={() => setExpandedId(isExpanded ? null : profile.id)}
-                      className="text-sm text-on-surface-muted underline hover:text-on-surface"
-                    >
-                      {isExpanded ? "Sembunyikan" : "Detail"}
-                    </button>
-                  </div>
-                </div>
-
-                {isExpanded && (
-                  <div className="mt-4 border-t border-border pt-4">
-                    <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-                      <p className="text-on-surface-muted">
-                        Tipe identitas:{" "}
-                        <span className="text-on-surface">
-                          {profile.id_type === "passport" ? "Paspor" : "KTP"}
-                        </span>
-                      </p>
-                      <p className="text-on-surface-muted">
-                        Nomor identitas:{" "}
-                        <span className="text-on-surface">{profile.id_number}</span>
-                      </p>
-                    </div>
-
-                    {profile.status === "rejected" && profile.rejection_reason && (
-                      <p className="mt-3 text-sm text-error">
-                        Alasan ditolak: {profile.rejection_reason}
-                      </p>
-                    )}
-
-                    <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                      {profile.id_document_url && (
-                        <a
-                          href={profile.id_document_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-on-surface underline"
-                        >
-                          Lihat Dokumen Identitas
-                        </a>
-                      )}
-                      {profile.address_proof_url && (
-                        <a
-                          href={profile.address_proof_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-on-surface underline"
-                        >
-                          Lihat Bukti Alamat
-                        </a>
-                      )}
-                      {profile.proof_of_funds_url && (
-                        <a
-                          href={profile.proof_of_funds_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-on-surface underline"
-                        >
-                          Lihat Proof of Funds
-                        </a>
-                      )}
-                    </div>
-
-                    {profile.status === "pending" && (
-                      <div className="mt-4 flex gap-3">
-                        <button
-                          onClick={() => setPendingAction({ type: "approve", id: profile.id })}
-                          className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500"
-                        >
-                          Setujui
-                        </button>
-                        <button
-                          onClick={() => setPendingAction({ type: "reject", id: profile.id })}
-                          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-500"
-                        >
-                          Tolak
-                        </button>
+      <div className="mt-5 rounded-lg border border-border bg-surface-container p-4">
+        {isLoading && !result ? (
+          <p className="text-sm text-on-surface-muted">Memuat...</p>
+        ) : profiles.length === 0 ? (
+          <p className="text-sm text-on-surface-muted">Tidak ada pengajuan KYC pembeli pada filter ini.</p>
+        ) : (
+          <div className={`overflow-x-auto ${isLoading ? "opacity-60" : ""}`}>
+            <table className="w-full min-w-[820px] text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-[11px] uppercase tracking-wider text-on-surface-muted">
+                  <th className="py-2 pr-3 font-medium">Pembeli</th>
+                  <th className="py-2 pr-3 font-medium">Identitas</th>
+                  <th className="py-2 pr-3 font-medium">Dokumen</th>
+                  <th className="py-2 pr-3 font-medium">Diajukan</th>
+                  <th className="py-2 pr-3 font-medium">Status &amp; peninjauan</th>
+                  <th className="py-2 font-medium">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border align-top">
+                {profiles.map((profile) => (
+                  <tr key={profile.id}>
+                    <td className="py-2 pr-3">
+                      <p className="text-on-surface">{profile.user?.name}</p>
+                      <p className="text-xs text-on-surface-muted">{profile.user?.email}</p>
+                    </td>
+                    <td className="py-2 pr-3 text-xs">
+                      <p className="text-on-surface-muted">{profile.id_type === "passport" ? "Paspor" : "KTP"}</p>
+                      <p className="font-mono text-on-surface">{profile.id_number}</p>
+                    </td>
+                    <td className="py-2 pr-3">
+                      <div className="flex flex-col gap-0.5 text-xs">
+                        {profile.id_document_url && (
+                          <a href={profile.id_document_url} target="_blank" rel="noreferrer" className="text-on-surface underline">
+                            Dokumen identitas
+                          </a>
+                        )}
+                        {profile.address_proof_url && (
+                          <a href={profile.address_proof_url} target="_blank" rel="noreferrer" className="text-on-surface underline">
+                            Bukti alamat
+                          </a>
+                        )}
+                        {profile.proof_of_funds_url && (
+                          <a href={profile.proof_of_funds_url} target="_blank" rel="noreferrer" className="text-on-surface underline">
+                            Proof of funds
+                          </a>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+                    </td>
+                    <td className="whitespace-nowrap py-2 pr-3 text-xs text-on-surface-muted">{formatDate(profile.created_at)}</td>
+                    <td className="py-2 pr-3">
+                      <ReviewCell
+                        status={profile.status}
+                        reviewedBy={profile.reviewed_by}
+                        reviewedAt={profile.reviewed_at}
+                        rejectionReason={profile.rejection_reason}
+                        historyHref={`/admin/activity?subject_type=BuyerProfile&subject_id=${profile.id}`}
+                      />
+                    </td>
+                    <td className="py-2">
+                      {profile.status === "pending" ? (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setPendingAction({ type: "approve", id: profile.id })}
+                            className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-emerald-500"
+                          >
+                            Setujui
+                          </button>
+                          <button
+                            onClick={() => setPendingAction({ type: "reject", id: profile.id })}
+                            className="rounded-md bg-red-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-red-500"
+                          >
+                            Tolak
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-on-surface-muted">Selesai ditinjau</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {result && <Pager page={result.meta.current_page} lastPage={result.meta.last_page} total={result.meta.total} onPage={setPage} />}
+      </div>
 
       {pendingAction?.type === "approve" && (
         <ConfirmModal
-          title="Setujui KYC Buyer"
-          message="Setujui KYC buyer ini?"
+          title="Setujui KYC Pembeli"
+          message="Setujui KYC pembeli ini?"
           confirmLabel="Setujui"
           isSubmitting={isSubmitting}
           onConfirm={(values) => runAction(pendingAction, values)}
@@ -209,8 +183,8 @@ export default function AdminBuyerKycPage() {
 
       {pendingAction?.type === "reject" && (
         <ConfirmModal
-          title="Tolak KYC Buyer"
-          message="Jelaskan alasan penolakan KYC buyer ini."
+          title="Tolak KYC Pembeli"
+          message="Jelaskan alasan penolakan KYC pembeli ini."
           fields={[{ name: "reason", label: "Alasan Penolakan", required: true }]}
           confirmLabel="Tolak"
           isSubmitting={isSubmitting}

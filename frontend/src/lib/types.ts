@@ -58,11 +58,18 @@ export type Vehicle = {
   model: string;
   year: number;
   price: string;
+  /** Promo potongan harga terbaik yang sedang berjalan (harga coret). */
+  promo?: CatalogPromo | null;
   mileage: number;
   location: string;
   status: VehicleStatus;
   cover_photo_url: string | null;
   seller_name?: string;
+  /** Jejak verifikasi — hanya dikirim untuk admin. */
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  rejection_reason?: string | null;
+  created_at?: string;
 };
 
 export type VehiclePhoto = {
@@ -120,6 +127,8 @@ export type VehicleDetail = {
   year: number;
   vin: string | null;
   price: string;
+  /** Promo potongan harga terbaik yang sedang berjalan (harga coret). */
+  promo?: CatalogPromo | null;
   mileage: number;
   location: string;
   description: string | null;
@@ -140,7 +149,7 @@ export type VehicleDetail = {
 
 export type PaymentGateway = "mock" | "xendit";
 export type PaymentStatus = "pending" | "paid" | "failed" | "expired" | "cancelled";
-export type PaymentScheme = "down_payment" | "full";
+export type PaymentScheme = "down_payment" | "full" | "credit";
 export type InsuranceKind = "none" | "tlo" | "all_risk";
 export type EscrowStatus =
   | "escrow_hold"
@@ -169,6 +178,12 @@ export type TransactionDocumentType =
 export type TransactionDocumentFolder = "Financial" | "Legal" | "Insurance" | "Bank";
 
 export type SignerRole = "buyer" | "seller";
+
+export type HandoverChecklistItem = {
+  key: string;
+  label: string;
+  is_met: boolean;
+};
 
 export type SigningChecklistItem = {
   type: TransactionDocumentType;
@@ -209,7 +224,8 @@ export type PriceBreakdown = {
     total_loss_threshold_percent: number | null;
   };
   due_now: { lines: BreakdownLine[]; total: number };
-  registration: { njkb: number; njkb_basis: string; lines: BreakdownLine[]; total: number; note: string };
+  /** in_escrow = true: biaya balik nama ditagih bersama DP (snapshot versi 2). */
+  registration: { njkb: number; njkb_basis: string; lines: BreakdownLine[]; total: number; in_escrow?: boolean; note: string };
   seller_settlement: {
     escrow_vehicle_portion: number;
     commission_rate: number;
@@ -217,10 +233,20 @@ export type PriceBreakdown = {
     commission_basis: string;
     net_from_escrow: number;
     direct_remaining: number;
+    /** Siapa yang melunasi sisa harga ke penjual. */
+    remaining_payer?: "buyer" | "lender" | null;
     total_net: number;
     note: string;
   };
   total_cost_of_ownership: { lines: BreakdownLine[]; total: number };
+  /** Rencana kredit leasing yang dipilih (hanya skema kredit). */
+  credit?: CreditPlan | null;
+  promotions?: {
+    lines: PromotionLine[];
+    due_now_saving: number;
+    total_saving: number;
+    note: string;
+  };
   credit_simulation: {
     applicable: boolean;
     lender: string;
@@ -229,15 +255,108 @@ export type PriceBreakdown = {
     provision_rate?: number;
     provision_amount?: number;
     admin_fee?: number;
+    fiducia_fee?: number;
+    min_dp_percent?: number;
+    age_surcharge_rate?: number;
+    vehicle_age_years?: number | null;
     rows: {
       tenor_months: number;
       flat_rate: number;
+      effective_rate?: number;
       interest_total: number;
       monthly_installment: number;
       monthly_installment_with_insurance: number;
       total_payment: number;
     }[];
   };
+};
+
+export type CreditPlan = {
+  lender: string;
+  tenor_months: number;
+  vehicle_age_years: number | null;
+  base_flat_rate: number;
+  age_surcharge_rate: number;
+  flat_rate: number;
+  rate_basis: string;
+  vehicle_financed: number;
+  insurance_financed: number;
+  principal: number;
+  interest_total: number;
+  monthly_installment: number;
+  total_payable: number;
+  effective_rate: number;
+  upfront: { lines: BreakdownLine[]; total: number };
+  late_fee_daily_rate: number;
+  note: string;
+};
+
+export type LoanStatus = "submitted" | "approved" | "paid_off";
+export type InstallmentStatus = "paid" | "overdue" | "due" | "upcoming";
+
+export type LoanInstallment = {
+  id: number;
+  vehicle_loan_id: number;
+  sequence: number;
+  due_date: string;
+  principal_amount: string;
+  interest_amount: string;
+  amount: string;
+  status: InstallmentStatus;
+  days_late: number;
+  late_fee: number;
+  amount_due: number;
+  paid_at: string | null;
+  paid_amount: string | null;
+  payment_method: string | null;
+  payment_channel: string | null;
+  payment_account_masked: string | null;
+  payment_approval_code: string | null;
+  recorded_by?: string | null;
+  note: string | null;
+};
+
+export type VehicleLoan = {
+  id: number;
+  transaction_id: number;
+  transaction?: {
+    id: number;
+    invoice_number: string | null;
+    vehicle: string | null;
+    buyer: string | null;
+    seller: string | null;
+    vehicle_price: string | null;
+  };
+  lender_name: string;
+  contract_number: string;
+  status: LoanStatus;
+  status_label: string;
+  vehicle_financed: string;
+  insurance_financed: string;
+  principal: string;
+  flat_rate: string;
+  effective_rate: string;
+  tenor_months: number;
+  interest_total: string;
+  monthly_installment: string;
+  total_payable: string;
+  submitted_at: string;
+  auto_approve_at: string;
+  approved_at: string | null;
+  approved_by?: string | null;
+  lender_disbursed_at: string | null;
+  paid_off_at: string | null;
+  clock_offset_months: number;
+  simulated_today: string;
+  summary?: {
+    paid_count: number;
+    outstanding_principal: number;
+    outstanding_amount: number;
+    overdue_count: number;
+    late_fees_due: number;
+    next_due_date: string | null;
+  };
+  installments?: LoanInstallment[];
 };
 
 export type PriceQuote = { breakdown: PriceBreakdown; available_addons: InsuranceAddonOption[] };
@@ -274,6 +393,7 @@ export type TransactionPayout = {
   commission_rate: string;
   commission_amount: string;
   payout_amount: string;
+  bonus_amount?: string;
   reference: string | null;
   failure_reason: string | null;
   initiated_by: string | null;
@@ -295,6 +415,7 @@ export type Transaction = {
   insurance_premium: string | null;
   insurance_addons?: string[];
   insurance_policy_number?: string | null;
+  promo_code?: string | null;
   buyer_address: string | null;
   buyer_phone: string | null;
   buyer_notes: string | null;
@@ -314,6 +435,8 @@ export type Transaction = {
   paid_at: string | null;
   expires_at: string | null;
   escrow_status: EscrowStatus | null;
+  handover_requested_at: string | null;
+  handover_approved_at: string | null;
   buyer_confirmed_at: string | null;
   seller_confirmed_at: string | null;
   dispute_reason: string | null;
@@ -330,7 +453,9 @@ export type Transaction = {
   documents?: TransactionDocument[];
   price_breakdown?: PriceBreakdown;
   signing_checklist?: SigningChecklistItem[];
+  handover_checklist?: HandoverChecklistItem[];
   shipment?: Shipment | null;
+  loan?: VehicleLoan | null;
   created_at: string;
 };
 
@@ -390,5 +515,178 @@ export type Paginated<T> = {
     current_page: number;
     last_page: number;
     total: number;
+  };
+};
+
+export type CatalogPromo = {
+  id: number;
+  name: string;
+  badge: string | null;
+  description: string | null;
+  discount_amount: number;
+  final_price: number;
+  ends_at: string | null;
+};
+
+export type PromoBenefit = "discount" | "free_addon" | "credit_rate";
+
+export type PromotionLine = {
+  promo_id: number;
+  name: string;
+  code: string | null;
+  kind: "auto" | "voucher";
+  badge: string | null;
+  benefit: PromoBenefit;
+  label: string;
+  basis: string;
+  saving: number;
+  in_due_now: boolean;
+  applied: boolean;
+};
+
+export type Promo = {
+  id: number;
+  name: string;
+  code: string | null;
+  kind: "auto" | "voucher";
+  benefit: PromoBenefit;
+  benefit_summary: string;
+  discount_type: "percent" | "fixed" | null;
+  discount_value: string | null;
+  max_discount: string | null;
+  addon_code: string | null;
+  rate_cut: string | null;
+  min_vehicle_price: string | null;
+  brand: string | null;
+  badge: string | null;
+  description: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  quota: number | null;
+  used_count: number;
+  is_active?: boolean;
+  is_running: boolean;
+  redemptions_count?: number;
+  redemptions_total?: number;
+  created_at: string;
+};
+
+export type ActivityCategory =
+  | "account"
+  | "verification"
+  | "transaction"
+  | "payment"
+  | "handover"
+  | "document"
+  | "shipment"
+  | "credit"
+  | "payout"
+  | "bonus"
+  | "promo";
+
+export type ActivityLog = {
+  id: number;
+  created_at: string;
+  actor: { id: number; name: string; role: "admin" | "seller" | "buyer" | null } | null;
+  category: ActivityCategory;
+  category_label: string;
+  action: string;
+  description: string;
+  subject_type: string | null;
+  subject_id: number | null;
+  transaction_id: number | null;
+  properties: Record<string, unknown> | null;
+  ip_address: string | null;
+};
+
+export type SellerBonusItem = {
+  id: number;
+  type: "sale" | "tier";
+  tier_threshold: number | null;
+  amount: string;
+  basis: string;
+  status: string;
+  paid_at: string | null;
+  transaction_id: number | null;
+  vehicle: string | null;
+};
+
+export type SellerBonusSummary = {
+  total_bonus: number;
+  completed_sales: number;
+  sale_rate: number;
+  next_tier: { threshold: number; amount: number; remaining_sales: number } | null;
+  tiers: { threshold: number; amount: number; achieved: boolean }[];
+};
+
+export type CountRow = { key: string; count: number };
+
+export type AdminReport = {
+  range: { from: string; to: string };
+  kpis: {
+    gmv: number;
+    transactions_paid: number;
+    transactions_created: number;
+    transactions_cancelled: number;
+    average_ticket: number;
+    escrow_collected: number;
+    escrow_held: number;
+    commission_revenue: number;
+    payouts_paid: number;
+    bonuses_paid: number;
+    promo_benefit: number;
+    loans_active: number;
+    loan_outstanding_principal: number;
+    installments_collected: number;
+    late_fees_collected: number;
+    overdue_loans: number;
+  };
+  monthly: { month: string; transactions: number; gmv: number; commission: number }[];
+  escrow_status: CountRow[];
+  payment_schemes: { key: string; count: number; gmv: number }[];
+  top_brands: { brand: string; count: number; gmv: number }[];
+  verification: { seller_kyc: CountRow[]; buyer_kyc: CountRow[]; vehicles: CountRow[] };
+  tables: {
+    sales: {
+      id: number;
+      invoice_number: string | null;
+      paid_at: string | null;
+      vehicle: string | null;
+      buyer: string | null;
+      seller: string | null;
+      scheme: string | null;
+      vehicle_price: number;
+      amount: number;
+      promo_code: string | null;
+      escrow_status: string | null;
+      payout_status: string | null;
+    }[];
+    payouts: {
+      id: number;
+      paid_at: string | null;
+      transaction_id: number;
+      vehicle: string | null;
+      seller: string | null;
+      method: string | null;
+      commission_amount: number;
+      payout_amount: number;
+      bonus_amount: number;
+      reference: string | null;
+    }[];
+    bonuses: { id: number; created_at: string | null; seller: string | null; type: string; basis: string; amount: number; transaction_id: number | null }[];
+    promos: { id: number; created_at: string | null; promo: string | null; code: string | null; benefit: string | null; buyer: string | null; transaction_id: number; benefit_amount: number }[];
+    loans: {
+      id: number;
+      contract_number: string;
+      buyer: string | null;
+      vehicle: string | null;
+      status: string;
+      principal: number;
+      tenor_months: number;
+      paid_count: number;
+      outstanding_principal: number;
+      overdue_count: number;
+      late_fees_due: number;
+    }[];
   };
 };

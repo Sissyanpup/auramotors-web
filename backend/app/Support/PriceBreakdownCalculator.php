@@ -9,8 +9,8 @@ use App\Models\Vehicle;
 
 /**
  * Satu-satunya sumber perhitungan rincian harga transaksi: komposisi pajak di
- * harga kendaraan, premi + perluasan asuransi, tagihan yang dibayar sekarang,
- * biaya balik nama Samsat, hak bersih penjual, total biaya kepemilikan, dan
+ * harga kendaraan, premi + perluasan asuransi, tagihan yang dibayar sekarang
+ * (DP + asuransi + biaya balik nama), hak bersih penjual, total biaya kepemilikan, dan
  * simulasi kredit. Hasilnya di-snapshot ke `transactions.price_breakdown` saat
  * checkout, lalu dibaca ulang oleh API, halaman frontend, dan semua PDF — jadi
  * angka yang dilihat pembeli, penjual, dan yang tercetak di kontrak selalu sama.
@@ -22,9 +22,10 @@ class PriceBreakdownCalculator
 {
     /**
      * @param  array<int, string>  $addons
+     * @param  array<int, array<string, mixed>>  $promotions  dari PromoService::calculatorInput()
      * @return array<string, mixed>
      */
-    public function forVehicle(Vehicle $vehicle, PaymentScheme $scheme, float $dpPercent, InsuranceType $insuranceType, array $addons = []): array
+    public function forVehicle(Vehicle $vehicle, PaymentScheme $scheme, float $dpPercent, InsuranceType $insuranceType, array $addons = [], ?int $tenorMonths = null, array $promotions = []): array
     {
         $basePremium = 0.0;
         $insuranceLabel = $insuranceType->label();
@@ -47,6 +48,9 @@ class PriceBreakdownCalculator
             basePremium: $basePremium,
             basePremiumPercent: $basePercent,
             addons: $addons,
+            tenorMonths: $tenorMonths,
+            vehicleYear: $vehicle->year ? (int) $vehicle->year : null,
+            promotions: $promotions,
         );
     }
 
@@ -83,6 +87,7 @@ class PriceBreakdownCalculator
             basePremiumPercent: $vehiclePrice > 0 && $insurancePremium > 0 ? $insurancePremium / $vehiclePrice * 100 : null,
             addons: [],
             includeInsuranceFees: false,
+            includeRegistrationInDueNow: false,
         );
     }
 
@@ -141,17 +146,45 @@ class PriceBreakdownCalculator
         ?float $basePremiumPercent,
         array $addons,
         bool $includeInsuranceFees = true,
+        bool $includeRegistrationInDueNow = true,
+        ?int $tenorMonths = null,
+        ?int $vehicleYear = null,
+        array $promotions = [],
     ): array {
         $isFull = $scheme === PaymentScheme::Full;
+        $isCredit = $scheme === PaymentScheme::Credit;
         $dpPercent = $isFull ? 100.0 : $dpPercent;
         $dpAmount = $isFull ? $vehiclePrice : round($vehiclePrice * $dpPercent / 100, 2);
         $remaining = max(0.0, round($vehiclePrice - $dpAmount, 2));
 
+        // Promo gratis perluasan: perluasannya ikut dipasang di polis, lalu premi
+        // tahun pertamanya disubsidi platform (baris negatif di tagihan).
+        foreach ($promotions as $promo) {
+            if ($promo['benefit'] === 'free_addon' && $this->addonAllowedFor((string) $promo['addon_code'], $insuranceType)) {
+                $addons[] = $promo['addon_code'];
+            }
+        }
+        $rateCut = $isCredit
+            ? array_sum(array_map(fn (array $promo) => $promo['benefit'] === 'credit_rate' ? (float) $promo['rate_cut'] : 0.0, $promotions))
+            : 0.0;
+
         $insurance = $this->insurance($vehiclePrice, $insuranceType, $insuranceLabel, $basePremium, $basePremiumPercent, $addons, $includeInsuranceFees);
-        $registration = $this->registration($vehiclePrice);
+        $registration = $this->registration($vehiclePrice, $includeRegistrationInDueNow);
+        $tenor = $tenorMonths ?? array_key_first(config('pricing.credit.flat_rates'));
+        $credit = $isCredit && $remaining > 0
+            ? $this->creditPlan($remaining, $insurance['total'], $tenor, $vehicleYear, $rateCut)
+            : null;
+        $creditWithoutPromo = $credit !== null && $rateCut > 0
+            ? $this->creditPlan($remaining, $insurance['total'], $tenor, $vehicleYear)
+            : $credit;
+        $promoSection = $this->promotions($promotions, $vehiclePrice, $dpAmount, $insurance, $credit, $creditWithoutPromo);
 
         $dueNowLines = [[
-            'label' => $isFull ? 'Pelunasan harga kendaraan (bayar penuh)' : 'Uang muka (DP) kendaraan',
+            'label' => match (true) {
+                $isFull => 'Pelunasan harga kendaraan (bayar penuh)',
+                $isCredit => 'Uang muka (DP) kredit kendaraan',
+                default => 'Uang muka (DP) kendaraan',
+            },
             'basis' => $this->percent($dpPercent).' × '.$this->rupiah($vehiclePrice),
             'amount' => $dpAmount,
         ]];
@@ -162,13 +195,46 @@ class PriceBreakdownCalculator
                 'amount' => $insurance['total'],
             ];
         }
-        $dueNowTotal = round($dpAmount + $insurance['total'], 2);
+        // Biaya balik nama ditagih bersama DP (catatan dosen 16 Okt), bukan dicicil:
+        // escrow meneruskannya ke Samsat/biro jasa, tidak ikut ke penjual.
+        if ($includeRegistrationInDueNow) {
+            $dueNowLines[] = [
+                'label' => 'Biaya balik nama & registrasi kendaraan',
+                'basis' => 'Rincian di bagian Biaya Balik Nama — diteruskan escrow ke Samsat',
+                'amount' => $registration['total'],
+            ];
+        }
+        // Biaya kredit di muka (provisi, administrasi, fidusia) milik leasing — ikut
+        // dibayar ke escrow bersama DP lalu diteruskan, bukan ke penjual.
+        foreach ($credit['upfront']['lines'] ?? [] as $line) {
+            $dueNowLines[] = $line;
+        }
+        foreach ($promoSection['lines'] as $line) {
+            if ($line['applied'] && $line['in_due_now']) {
+                $dueNowLines[] = ['label' => 'Promo: '.$line['label'], 'basis' => $line['basis'], 'amount' => -$line['saving']];
+            }
+        }
+        $dueNowTotal = round(array_sum(array_column($dueNowLines, 'amount')), 2);
 
         $commissionRate = (float) config('payout.commission_rate');
         $commission = round($dpAmount * $commissionRate, 2);
 
+        $ownershipLines = [
+            ['label' => 'Harga kendaraan', 'amount' => $vehiclePrice],
+            ['label' => 'Asuransi tahun pertama', 'amount' => $insurance['total']],
+            ['label' => 'Estimasi balik nama & registrasi (Samsat)', 'amount' => $registration['total']],
+        ];
+        if ($credit !== null) {
+            $ownershipLines[] = ['label' => 'Asuransi tahun ke-2 dst. (ikut dicicil)', 'amount' => $credit['insurance_financed']];
+            $ownershipLines[] = ['label' => 'Total bunga kredit '.$credit['tenor_months'].' bulan', 'amount' => $credit['interest_total']];
+            $ownershipLines[] = ['label' => 'Biaya kredit di muka (provisi, admin, fidusia)', 'amount' => $credit['upfront']['total']];
+        }
+        if ($promoSection['due_now_saving'] > 0) {
+            $ownershipLines[] = ['label' => 'Hemat dari promo (subsidi platform)', 'amount' => -$promoSection['due_now_saving']];
+        }
+
         return [
-            'version' => 1,
+            'version' => 2,
             'vehicle_price' => $vehiclePrice,
             'payment' => [
                 'scheme' => $scheme->value,
@@ -190,18 +256,20 @@ class PriceBreakdownCalculator
                 'commission_basis' => $this->percent($commissionRate * 100).' × '.$this->rupiah($dpAmount).' (porsi kendaraan di escrow)',
                 'net_from_escrow' => round($dpAmount - $commission, 2),
                 'direct_remaining' => $remaining,
+                // Siapa yang melunasi sisa harga ke penjual: pembeli langsung (skema DP) atau leasing (kredit).
+                'remaining_payer' => $remaining <= 0 ? null : ($isCredit ? 'lender' : 'buyer'),
                 'total_net' => round($vehiclePrice - $commission, 2),
-                'note' => 'Premi asuransi tidak masuk ke penjual — diteruskan ke perusahaan asuransi.',
+                'note' => $isCredit
+                    ? 'Sisa harga dilunasi sekaligus oleh leasing setelah kredit disetujui — penjual tidak menanggung cicilan. Bunga, biaya kredit, premi asuransi, dan biaya balik nama bukan hak penjual.'
+                    : 'Premi asuransi dan biaya balik nama tidak masuk ke penjual — diteruskan ke perusahaan asuransi dan Samsat.',
             ],
             'total_cost_of_ownership' => [
-                'lines' => [
-                    ['label' => 'Harga kendaraan', 'amount' => $vehiclePrice],
-                    ['label' => 'Asuransi tahun pertama', 'amount' => $insurance['total']],
-                    ['label' => 'Estimasi balik nama & registrasi (Samsat)', 'amount' => $registration['total']],
-                ],
-                'total' => round($vehiclePrice + $insurance['total'] + $registration['total'], 2),
+                'lines' => $ownershipLines,
+                'total' => round(array_sum(array_column($ownershipLines, 'amount')), 2),
             ],
-            'credit_simulation' => $this->creditSimulation($remaining, $insurance['total']),
+            'credit' => $credit,
+            'promotions' => $promoSection,
+            'credit_simulation' => $this->creditSimulation($remaining, $insurance['total'], $vehicleYear),
         ];
     }
 
@@ -349,7 +417,7 @@ class PriceBreakdownCalculator
     /**
      * @return array<string, mixed>
      */
-    private function registration(float $vehiclePrice): array
+    private function registration(float $vehiclePrice, bool $inEscrow): array
     {
         $cfg = config('pricing.registration');
         $njkb = round($vehiclePrice * (float) $cfg['njkb_ratio'], 0);
@@ -404,14 +472,162 @@ class PriceBreakdownCalculator
             'njkb_basis' => $this->percent($cfg['njkb_ratio'] * 100).' × harga kendaraan (simulasi NJKB)',
             'lines' => $lines,
             'total' => round(array_sum(array_column($lines, 'amount')), 0),
-            'note' => 'Dibayar pembeli langsung ke Samsat saat balik nama — tidak ditagih melalui escrow.',
+            'in_escrow' => $inEscrow,
+            'note' => $inEscrow
+                ? 'Ditagih bersama uang muka (DP) dan ditahan di escrow, lalu disetorkan ke Samsat/biro jasa saat proses balik nama. Tidak ikut dicicil.'
+                : 'Dibayar pembeli langsung ke Samsat saat balik nama — tidak ditagih melalui escrow.',
+        ];
+    }
+
+    /**
+     * Rencana kredit yang dipilih pembeli (skema kredit). Premi asuransi tahun
+     * pertama dibayar di muka; premi tahun ke-2 dst. dibiayai leasing (asuransi
+     * wajib selama tenor). Angsuran dibulatkan ke atas ke ratusan rupiah.
+     *
+     * @return array<string, mixed>
+     */
+    public function creditPlan(float $vehicleFinanced, float $annualInsurance, int $tenorMonths, ?int $vehicleYear, float $promoRateCut = 0.0): array
+    {
+        $cfg = config('pricing.credit');
+        $years = $tenorMonths / 12;
+        [$baseRate, $surcharge, $age] = $this->creditRate($tenorMonths, $vehicleYear);
+        $promoRateCut = min($promoRateCut, $baseRate + $surcharge);
+        $rate = $baseRate + $surcharge - $promoRateCut;
+
+        $insuranceFinanced = round($annualInsurance * max(0, ceil($years) - 1), 0);
+        $principal = round($vehicleFinanced + $insuranceFinanced, 0);
+        $monthly = $this->roundUpToHundreds(($principal + $principal * $rate * $years) / $tenorMonths);
+        $totalPayable = $monthly * $tenorMonths;
+
+        $provision = round($principal * (float) $cfg['provision_rate'], 0);
+        $fiducia = $this->fiduciaFee($principal);
+        $upfrontLines = [
+            [
+                'label' => 'Provisi kredit',
+                'basis' => $this->percent((float) $cfg['provision_rate'] * 100).' × pokok pinjaman '.$this->rupiah($principal),
+                'amount' => $provision,
+            ],
+            [
+                'label' => 'Biaya administrasi leasing',
+                'basis' => 'Biaya tetap per kontrak',
+                'amount' => (float) $cfg['admin_fee'],
+            ],
+            [
+                'label' => 'Biaya jaminan fidusia',
+                'basis' => 'Honor notaris '.$this->rupiah((float) $cfg['fiducia']['notary_fee']).' + PNBP pendaftaran '.$this->rupiah($fiducia - (float) $cfg['fiducia']['notary_fee']),
+                'amount' => $fiducia,
+            ],
+        ];
+
+        return [
+            'lender' => $cfg['lender_name'],
+            'tenor_months' => $tenorMonths,
+            'vehicle_age_years' => $age,
+            'base_flat_rate' => $baseRate,
+            'age_surcharge_rate' => $surcharge,
+            'flat_rate' => $rate,
+            'rate_basis' => $this->percent($baseRate * 100).' flat/tahun (tenor '.$tenorMonths.' bln)'
+                .($surcharge > 0 ? ' + '.$this->percent($surcharge * 100).' unit berumur '.$age.' tahun' : '')
+                .($promoRateCut > 0 ? ' − '.$this->percent($promoRateCut * 100).' promo bunga spesial' : ''),
+            'promo_rate_cut' => $promoRateCut,
+            'vehicle_financed' => $vehicleFinanced,
+            'insurance_financed' => $insuranceFinanced,
+            'principal' => $principal,
+            'interest_total' => round($totalPayable - $principal, 0),
+            'monthly_installment' => $monthly,
+            'total_payable' => $totalPayable,
+            'effective_rate' => $this->effectiveAnnualRate($principal, $monthly, $tenorMonths),
+            'upfront' => [
+                'lines' => $upfrontLines,
+                'total' => round(array_sum(array_column($upfrontLines, 'amount')), 0),
+            ],
+            'late_fee_daily_rate' => (float) $cfg['late_fee_daily_rate'],
+            'note' => 'Leasing melunasi sisa harga kendaraan ke penjual setelah kredit disetujui. Angsuran pertama jatuh tempo satu bulan setelah persetujuan (dibayar di belakang). Denda keterlambatan '
+                .$this->percent((float) $cfg['late_fee_daily_rate'] * 100).' per hari dari nilai angsuran. BPKB ditahan leasing sampai lunas.',
+        ];
+    }
+
+    /**
+     * Manfaat promo yang berlaku. Potongan harga & gratis perluasan mengurangi
+     * tagihan sekarang (disubsidi platform); potongan bunga mengurangi total
+     * cicilan ke leasing. Hak bersih penjual tidak berubah.
+     *
+     * @param  array<int, array<string, mixed>>  $promotions
+     * @param  array<string, mixed>  $insurance
+     * @param  array<string, mixed>|null  $credit
+     * @param  array<string, mixed>|null  $creditWithoutPromo
+     * @return array{lines: array<int, array<string, mixed>>, due_now_saving: float, total_saving: float, note: string}
+     */
+    private function promotions(array $promotions, float $vehiclePrice, float $dpAmount, array $insurance, ?array $credit, ?array $creditWithoutPromo): array
+    {
+        $lines = [];
+
+        foreach ($promotions as $promo) {
+            $line = [
+                'promo_id' => $promo['id'],
+                'name' => $promo['name'],
+                'code' => $promo['code'],
+                'kind' => $promo['kind'],
+                'badge' => $promo['badge'],
+                'benefit' => $promo['benefit'],
+                'label' => $promo['name'],
+                'basis' => '',
+                'saving' => 0.0,
+                'in_due_now' => false,
+                'applied' => false,
+            ];
+
+            if ($promo['benefit'] === 'discount') {
+                $amount = $promo['discount_type'] === 'percent'
+                    ? $vehiclePrice * (float) $promo['discount_value'] / 100
+                    : (float) $promo['discount_value'];
+                if ($promo['max_discount'] !== null) {
+                    $amount = min($amount, (float) $promo['max_discount']);
+                }
+                $amount = round(min(max(0.0, $amount), $dpAmount), 0);
+                $line['basis'] = ($promo['discount_type'] === 'percent'
+                    ? $this->percent((float) $promo['discount_value']).' × '.$this->rupiah($vehiclePrice)
+                    : 'Potongan tetap')
+                    .($promo['max_discount'] !== null ? ', maks. '.$this->rupiah((float) $promo['max_discount']) : '');
+                $line['saving'] = $amount;
+                $line['in_due_now'] = true;
+                $line['applied'] = $amount > 0;
+            }
+
+            if ($promo['benefit'] === 'free_addon') {
+                $addonLine = collect($insurance['lines'])->firstWhere('code', $promo['addon_code']);
+                if ($addonLine !== null) {
+                    $line['label'] = $promo['name'].' — gratis '.mb_strtolower(str_replace('Perluasan: ', '', $addonLine['label']));
+                    $line['basis'] = 'Premi perluasan tahun pertama ditanggung platform';
+                    $line['saving'] = (float) $addonLine['amount'];
+                    $line['in_due_now'] = true;
+                    $line['applied'] = true;
+                }
+            }
+
+            if ($promo['benefit'] === 'credit_rate' && $credit !== null && $creditWithoutPromo !== null) {
+                $line['basis'] = 'Bunga flat turun '.$this->percent((float) $promo['rate_cut'] * 100).' per tahun selama tenor';
+                $line['saving'] = round((float) $creditWithoutPromo['total_payable'] - (float) $credit['total_payable'], 0);
+                $line['applied'] = true;
+            }
+
+            $lines[] = $line;
+        }
+
+        $dueNowSaving = array_sum(array_map(fn (array $line) => $line['applied'] && $line['in_due_now'] ? $line['saving'] : 0.0, $lines));
+
+        return [
+            'lines' => $lines,
+            'due_now_saving' => round($dueNowSaving, 0),
+            'total_saving' => round(array_sum(array_map(fn (array $line) => $line['applied'] ? $line['saving'] : 0.0, $lines)), 0),
+            'note' => 'Potongan promo ditanggung AuraMotors (subsidi platform) atau leasing untuk bunga spesial — dana yang diterima penjual tidak berkurang.',
         ];
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function creditSimulation(float $principal, float $insuranceTotal): array
+    private function creditSimulation(float $principal, float $insuranceTotal, ?int $vehicleYear): array
     {
         $cfg = config('pricing.credit');
 
@@ -425,34 +641,103 @@ class PriceBreakdownCalculator
         }
 
         $rows = [];
-        foreach ($cfg['flat_rates'] as $months => $rate) {
-            $years = $months / 12;
-            $interest = round($principal * (float) $rate * $years, 0);
-            $monthly = round(($principal + $interest) / $months, 0);
-
-            $principalWithInsurance = $principal + $insuranceTotal;
-            $monthlyWithInsurance = round(($principalWithInsurance + $principalWithInsurance * (float) $rate * $years) / $months, 0);
+        foreach (array_keys($cfg['flat_rates']) as $months) {
+            $plan = $this->creditPlan($principal, $insuranceTotal, (int) $months, $vehicleYear);
+            $vehicleOnly = $this->roundUpToHundreds(($principal + $principal * $plan['flat_rate'] * $months / 12) / $months);
 
             $rows[] = [
                 'tenor_months' => (int) $months,
-                'flat_rate' => (float) $rate,
-                'interest_total' => $interest,
-                'monthly_installment' => $monthly,
-                'monthly_installment_with_insurance' => $monthlyWithInsurance,
-                'total_payment' => round($principal + $interest, 0),
+                'flat_rate' => $plan['flat_rate'],
+                'effective_rate' => $this->effectiveAnnualRate($principal, $vehicleOnly, (int) $months),
+                'interest_total' => round($vehicleOnly * $months - $principal, 0),
+                'monthly_installment' => $vehicleOnly,
+                'monthly_installment_with_insurance' => $plan['monthly_installment'],
+                'total_payment' => round($vehicleOnly * $months, 0),
             ];
         }
+
+        [, $surcharge, $age] = $this->creditRate((int) array_key_first($cfg['flat_rates']), $vehicleYear);
 
         return [
             'applicable' => true,
             'lender' => $cfg['lender_name'],
             'principal' => $principal,
+            'min_dp_percent' => (int) $cfg['min_dp_percent'],
+            'age_surcharge_rate' => $surcharge,
+            'vehicle_age_years' => $age,
             'provision_rate' => (float) $cfg['provision_rate'],
             'provision_amount' => round($principal * (float) $cfg['provision_rate'], 0),
             'admin_fee' => (float) $cfg['admin_fee'],
-            'note' => 'Ilustrasi pembiayaan sisa pelunasan dengan bunga flat. Kolom "+ asuransi" = premi tahun pertama ikut dicicil.',
+            'fiducia_fee' => $this->fiduciaFee($principal),
+            'note' => 'Ilustrasi kredit leasing untuk sisa harga dengan bunga flat (bunga efektif ditampilkan sebagai pembanding). Kolom "+ asuransi" = premi tahun ke-2 dst. ikut dicicil karena asuransi wajib selama tenor. DP minimal kredit '.$cfg['min_dp_percent'].'%.',
             'rows' => $rows,
         ];
+    }
+
+    /**
+     * @return array{0: float, 1: float, 2: int|null} [bunga dasar, tambahan umur, umur unit]
+     */
+    private function creditRate(int $tenorMonths, ?int $vehicleYear): array
+    {
+        $cfg = config('pricing.credit');
+        $baseRate = (float) ($cfg['flat_rates'][$tenorMonths] ?? end($cfg['flat_rates']));
+        $age = $vehicleYear !== null ? max(0, (int) now()->year - $vehicleYear) : null;
+
+        $surcharge = 0.0;
+        foreach ($cfg['age_surcharges'] as $rule) {
+            if ($age !== null && $age >= $rule['min_age']) {
+                $surcharge = (float) $rule['rate'];
+                break;
+            }
+        }
+
+        return [$baseRate, $surcharge, $age];
+    }
+
+    private function fiduciaFee(float $principal): float
+    {
+        $cfg = config('pricing.credit.fiducia');
+        $pnbp = (float) $cfg['pnbp_max'];
+
+        foreach ($cfg['pnbp_tiers'] as $ceiling => $fee) {
+            if ($principal <= $ceiling) {
+                $pnbp = (float) $fee;
+                break;
+            }
+        }
+
+        return (float) $cfg['notary_fee'] + $pnbp;
+    }
+
+    /**
+     * Bunga efektif tahunan (anuitas) yang setara dengan angsuran flat —
+     * dicari dengan bisection supaya pembeli bisa membandingkan dengan bank.
+     */
+    private function effectiveAnnualRate(float $principal, float $monthly, int $months): float
+    {
+        if ($principal <= 0 || $monthly * $months <= $principal) {
+            return 0.0;
+        }
+
+        $low = 0.0;
+        $high = 0.1;
+        $mid = 0.0;
+        for ($i = 0; $i < 100; $i++) {
+            $mid = ($low + $high) / 2;
+            $presentValue = $monthly * (1 - (1 + $mid) ** -$months) / $mid;
+            if ($presentValue > $principal) {
+                $low = $mid;
+            } else {
+                $high = $mid;
+            }
+        }
+
+        return round($mid * 12, 4);
+    }
+
+    private function roundUpToHundreds(float $value): float
+    {
+        return (float) (ceil($value / 100) * 100);
     }
 
     private function rupiah(float $value): string

@@ -40,7 +40,7 @@
         <li>Menghadap pejabat Samsat/Ditlantas Polda, mengajukan permohonan mutasi dan perubahan identitas pemilik.</li>
         <li>Melakukan cek fisik kendaraan dan menandatangani formulir yang diperlukan.</li>
         <li>Membayar BBN-KB, PKB, SWDKLLJ, dan PNBP penerbitan STNK, TNKB, serta BPKB atas nama Penerima Kuasa
-            (estimasi {{ $rp($breakdown['registration']['total']) }}, ditanggung Penerima Kuasa).</li>
+            (estimasi {{ $rp($breakdown['registration']['total']) }}, ditanggung Penerima Kuasa{{ ($breakdown['registration']['in_escrow'] ?? false) ? ' dan telah dibayar bersama uang muka melalui Rekening Escrow' : '' }}).</li>
         <li>Menerima STNK, TNKB, dan BPKB baru atas nama Penerima Kuasa.</li>
     </ol>
 

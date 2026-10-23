@@ -92,6 +92,7 @@ export default function Header() {
               <Link href="/seller/kyc" className="nav-link">KYC</Link>
               <Link href="/seller/vehicles" className="nav-link">Listing Saya</Link>
               <Link href="/seller/transactions" className="nav-link">Transaksi Penjualan</Link>
+              <Link href="/seller/bonus" className="nav-link">Bonus</Link>
             </>
           )}
           {!isLoading && user?.role === "buyer" && (
@@ -102,11 +103,8 @@ export default function Header() {
           )}
           {!isLoading && user?.role === "admin" && (
             <>
-              <Link href="/admin/kyc" className="nav-link">Review KYC Seller</Link>
-              <Link href="/admin/buyer-kyc" className="nav-link">Review KYC Buyer</Link>
-              <Link href="/admin/vehicles" className="nav-link">Review Listing</Link>
-              <Link href="/admin/transactions" className="nav-link">Escrow & Transaksi</Link>
-              <Link href="/admin/payouts" className="nav-link">Rekonsiliasi Payout</Link>
+              {/* Menu lengkap admin ada di sidebar kiri halaman /admin/* */}
+              <Link href="/admin/transactions" className="nav-link">Panel Admin</Link>
             </>
           )}
           {!isLoading && user && (
@@ -260,6 +258,7 @@ export default function Header() {
                   <Link href="/seller/kyc" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">KYC</Link>
                   <Link href="/seller/vehicles" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Listing Saya</Link>
                   <Link href="/seller/transactions" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Transaksi Penjualan</Link>
+                  <Link href="/seller/bonus" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Bonus</Link>
                 </>
               )}
               {!isLoading && user?.role === "buyer" && (
@@ -272,11 +271,7 @@ export default function Header() {
               )}
               {!isLoading && user?.role === "admin" && (
                 <>
-                  <Link href="/admin/kyc" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Review KYC Seller</Link>
-                  <Link href="/admin/buyer-kyc" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Review KYC Buyer</Link>
-                  <Link href="/admin/vehicles" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Review Listing</Link>
-                  <Link href="/admin/transactions" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Escrow & Transaksi</Link>
-                  <Link href="/admin/payouts" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Rekonsiliasi Payout</Link>
+                  <Link href="/admin/transactions" className="py-3.5 text-sm text-on-surface-muted transition-colors hover:text-on-surface">Panel Admin</Link>
                 </>
               )}
               {/* Profil — setara dengan menu navigasi lainnya */}

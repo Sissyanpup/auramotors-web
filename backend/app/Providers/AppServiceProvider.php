@@ -2,14 +2,32 @@
 
 namespace App\Providers;
 
+use App\Activity\ModelActivityObserver;
 use App\Enums\PaymentGatewayDriver;
 use App\Enums\PayoutMethod;
+use App\Models\BuyerProfile;
+use App\Models\LoanInstallment;
+use App\Models\Promo;
+use App\Models\PromoRedemption;
+use App\Models\SellerBonus;
+use App\Models\SellerProfile;
+use App\Models\Shipment;
+use App\Models\ShipmentDocument;
+use App\Models\Transaction;
+use App\Models\TransactionDocument;
+use App\Models\TransactionDocumentSignature;
+use App\Models\TransactionPayout;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleDocument;
+use App\Models\VehicleLoan;
 use App\Payments\MockGateway;
 use App\Payments\PaymentGateway;
 use App\Payments\XenditGateway;
 use App\Payouts\DisbursementGateway;
 use App\Payouts\ManualDisbursementGateway;
 use App\Payouts\XenditDisbursementGateway;
+use App\Promotions\PromoService;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -29,6 +47,10 @@ class AppServiceProvider extends ServiceProvider
             };
         });
 
+        // Satu instance per request: daftar promo berjalan cukup di-query sekali
+        // walaupun katalog menampilkan puluhan kendaraan.
+        $this->app->scoped(PromoService::class);
+
         $this->app->bind(DisbursementGateway::class, function () {
             return match (PayoutMethod::from(config('payout.driver'))) {
                 PayoutMethod::Xendit => new XenditDisbursementGateway,
@@ -47,6 +69,17 @@ class AppServiceProvider extends ServiceProvider
         // relations (reviewer, seller) that don't need eager loading outside list endpoints.
         Model::preventSilentlyDiscardingAttributes(! $this->app->isProduction());
         Model::preventAccessingMissingAttributes(! $this->app->isProduction());
+
+        // Log aktivitas global: setiap proses (verifikasi, transaksi, kredit, payout,
+        // promo, dst.) tercatat dari jalur mana pun perubahannya terjadi.
+        foreach ([
+            User::class, SellerProfile::class, BuyerProfile::class, Vehicle::class, VehicleDocument::class,
+            Transaction::class, TransactionDocument::class, TransactionDocumentSignature::class, TransactionPayout::class,
+            Shipment::class, ShipmentDocument::class, VehicleLoan::class, LoanInstallment::class,
+            SellerBonus::class, Promo::class, PromoRedemption::class,
+        ] as $model) {
+            $model::observe(ModelActivityObserver::class);
+        }
 
         // Override redirect target untuk guest — Laravel default panggil route('login')
         // yang tidak ada di app SPA ini (bukan blade), sehingga request browser-direct

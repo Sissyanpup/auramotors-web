@@ -22,7 +22,7 @@ class ShipmentTest extends TestCase
         $seller ??= User::factory()->create(['role' => UserRole::Seller]);
         $vehicle = Vehicle::factory()->create(['seller_id' => $seller->id]);
 
-        return Transaction::factory()->for($vehicle)->create([
+        return Transaction::factory()->handoverApproved()->for($vehicle)->create([
             'buyer_id' => $buyer->id,
             'seller_id' => $seller->id,
             'amount' => 100_000_000,

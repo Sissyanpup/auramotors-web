@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Vehicle;
+use App\Promotions\PromoService;
 use App\Support\SignedDocumentUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -25,6 +26,8 @@ class VehicleDetailResource extends JsonResource
             'year' => $this->year,
             'vin' => $this->vin,
             'price' => $this->price,
+            // Promo potongan harga terbaik yang sedang berjalan — ditampilkan sebagai harga coret.
+            'promo' => app(PromoService::class)->catalogPromo($this->resource),
             'mileage' => $this->mileage,
             'location' => $this->location,
             'description' => $this->description,

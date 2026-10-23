@@ -5,6 +5,7 @@ namespace App\Http\Requests\Buyer;
 use App\Enums\InsuranceType;
 use App\Enums\PaymentScheme;
 use App\Models\Vehicle;
+use App\Promotions\PromoService;
 use App\Support\PriceBreakdownCalculator;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -42,10 +43,35 @@ class PriceQuoteRequest extends FormRequest
             $vehicle->effectiveInsuranceOptions()
         );
 
+        // Kredit memakai kebijakan DP leasing (min. 20%), bukan preset DP penjual,
+        // dan wajib berasuransi selama tenor.
+        $isCredit = $this->input('payment_scheme') === PaymentScheme::Credit->value;
+        if ($isCredit) {
+            $paymentPercents = array_map('floatval', config('pricing.credit.dp_options'));
+            $insuranceTypes = array_values(array_diff($insuranceTypes, [InsuranceType::None->value]));
+        }
+
         return [
             'payment_scheme' => ['required', new Enum(PaymentScheme::class)],
             'dp_percent' => ['required', 'numeric', Rule::in($paymentPercents)],
+            'tenor_months' => ['nullable', 'required_if:payment_scheme,'.PaymentScheme::Credit->value, 'integer', Rule::in(array_keys(config('pricing.credit.flat_rates')))],
             'insurance_type' => ['required', new Enum(InsuranceType::class), Rule::in($insuranceTypes)],
+            'promo_code' => [
+                'nullable',
+                'string',
+                'max:32',
+                function (string $attribute, mixed $value, Closure $fail) use ($vehicle) {
+                    $error = app(PromoService::class)->voucherError(
+                        (string) $value,
+                        $vehicle,
+                        PaymentScheme::tryFrom((string) $this->input('payment_scheme')),
+                        InsuranceType::tryFrom((string) $this->input('insurance_type')),
+                    );
+                    if ($error !== null) {
+                        $fail($error);
+                    }
+                },
+            ],
             'insurance_addons' => ['nullable', 'array'],
             'insurance_addons.*' => [
                 'string',
@@ -65,13 +91,43 @@ class PriceQuoteRequest extends FormRequest
     {
         return [
             'dp_percent.in' => 'Persentase DP yang dipilih tidak tersedia untuk kendaraan ini.',
-            'insurance_type.in' => 'Opsi asuransi yang dipilih tidak tersedia untuk kendaraan ini.',
+            'insurance_type.in' => $this->input('payment_scheme') === PaymentScheme::Credit->value
+                ? 'Kredit leasing wajib memakai asuransi (All Risk atau TLO) selama tenor.'
+                : 'Opsi asuransi yang dipilih tidak tersedia untuk kendaraan ini.',
+            'tenor_months.required_if' => 'Pilih tenor kredit.',
+            'tenor_months.in' => 'Tenor kredit yang tersedia: 12, 24, 36, 48, atau 60 bulan.',
         ];
     }
 
     public function scheme(): PaymentScheme
     {
         return PaymentScheme::from($this->validated('payment_scheme'));
+    }
+
+    public function promoCode(): ?string
+    {
+        $code = $this->validated('promo_code');
+
+        return $code === null || trim((string) $code) === '' ? null : mb_strtoupper(trim((string) $code));
+    }
+
+    /**
+     * Promo yang berlaku (auto terbaik + voucher) dalam bentuk input kalkulator.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function promotions(): array
+    {
+        $promos = app(PromoService::class);
+
+        return $promos->calculatorInput(
+            $promos->resolveForCheckout($this->route('vehicle'), $this->scheme(), $this->insuranceType(), $this->promoCode())
+        );
+    }
+
+    public function tenorMonths(): ?int
+    {
+        return $this->scheme() === PaymentScheme::Credit ? (int) $this->validated('tenor_months') : null;
     }
 
     public function insuranceType(): InsuranceType

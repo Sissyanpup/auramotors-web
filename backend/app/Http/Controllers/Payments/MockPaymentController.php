@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Payments;
 
+use App\Credit\CreditService;
 use App\Documents\DocumentGenerator;
 use App\Enums\PaymentGatewayDriver;
 use App\Enums\TransactionPaymentStatus;
@@ -29,7 +30,7 @@ class MockPaymentController extends Controller
      * + OTP. Detail metode bayar (tanpa nomor kartu penuh/CVV) dicatat untuk
      * Bukti Pembayaran Bank, lalu dana masuk escrow & dokumen pasca-bayar terbit.
      */
-    public function pay(MockPaymentRequest $request, string $reference, EscrowStateMachine $escrow, DocumentGenerator $docs): TransactionResource
+    public function pay(MockPaymentRequest $request, string $reference, EscrowStateMachine $escrow, DocumentGenerator $docs, CreditService $credit): TransactionResource
     {
         $transaction = $this->findTransaction($reference);
 
@@ -44,6 +45,7 @@ class MockPaymentController extends Controller
 
         $escrow->holdFunds($transaction);
         $docs->generatePaidDocuments($transaction);
+        $credit->openApplication($transaction);
 
         return new TransactionResource($transaction->fresh(['vehicle.photos', 'seller', 'documents']));
     }

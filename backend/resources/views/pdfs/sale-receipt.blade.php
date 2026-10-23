@@ -30,7 +30,7 @@
         <tr><th>Cara Pembayaran</th><th class="num">Jumlah</th></tr>
         <tr><td>{{ $isFull ? 'Pelunasan penuh' : 'Uang muka' }} melalui rekening escrow {{ $legal['platform']['name'] }} ({{ $t->payment_approval_code ?? '-' }})</td><td class="num">{{ $rp($breakdown['payment']['dp_amount']) }}</td></tr>
         @unless($isFull)
-            <tr><td>Sisa pelunasan dibayar langsung kepada Penjual saat serah terima</td><td class="num">{{ $rp($breakdown['payment']['remaining_amount']) }}</td></tr>
+            <tr><td>Sisa pelunasan {{ ($breakdown['seller_settlement']['remaining_payer'] ?? 'buyer') === 'lender' ? 'dilunasi leasing (' . $breakdown['credit']['lender'] . ') kepada Penjual setelah kredit disetujui' : 'dibayar langsung kepada Penjual saat serah terima' }}</td><td class="num">{{ $rp($breakdown['payment']['remaining_amount']) }}</td></tr>
         @endunless
         <tr class="subtotal"><td>Total harga kendaraan</td><td class="num">{{ $rp($price) }}</td></tr>
     </table>

@@ -88,8 +88,26 @@
 - [x] Surat bank: Bukti Pembayaran (Payment Advice) & Surat Konfirmasi Penempatan Dana Escrow, berkop bank kustodian fiktif.
 - [x] Portal bank simulasi `/bank-portal/[reference]` (tema putih, terpisah dari tema AuraMotors): kartu kredit/debit + 3-D Secure, PayPal, Virtual Account/internet banking, OTP 6 digit apa saja, jeda proses realistis. Nomor kartu & CVV tidak disimpan.
 - [x] Premi asuransi dikeluarkan dari basis komisi & payout seller (diteruskan ke asuradur).
-- [ ] Metode bayar **kredit/leasing** sungguhan (pengajuan, approval bank, angsuran). _(Saat ini baru simulasi cicilan di Rincian Harga — dibahas dulu sesuai catatan dosen.)_
-- [ ] Gate approval serah-terima admin menunggu BAST ditandatangani kedua pihak. _(Saat ini hanya ditampilkan sebagai checklist ke admin.)_
+- [x] Metode bayar **kredit/leasing** sungguhan (pengajuan, approval bank, angsuran). _(Selesai di Epic 11 / Sprint 11.)_
+- [x] Gate approval serah-terima admin menunggu BAST ditandatangani kedua pihak. _(Selesai di Sprint 11: payout release butuh BAST bertanda tangan.)_
+
+### Epic 11 — Revisi Dosen 16 Okt: Kredit, Cicilan, Laporan, Bonus & Promo
+
+Sprint 11 (alur & keuangan):
+
+- [x] Menu admin pindah ke sidebar kiri (`AdminSidebar`), header cukup satu tautan "Panel Admin".
+- [x] Serah terima dua tahap: seller mengajukan → admin memeriksa checklist & menyetujui → seller menyerahkan/mengirim → buyer konfirmasi terima. Shipment & tracker GPS terkunci sampai disetujui. Payout butuh BAST ditandatangani kedua pihak.
+- [x] Biaya balik nama ditagih bersama DP (masuk `due_now`, tidak dicicil), diteruskan escrow ke Samsat; tidak masuk basis komisi/payout seller.
+- [x] Revisi bunga kredit: flat 8/9/10/11/12% per tahun untuk tenor 12–60 bulan, +1% (umur ≥ 6 th) / +2% (≥ 11 th), bunga efektif, provisi 1%, admin, fidusia (notaris + PNBP berjenjang), asuransi tahun ke-2 dst. dicicil. DP minimal kredit 20%.
+- [x] Kredit sebagai metode bayar: leasing fiktif, pengajuan → approval otomatis setelah jeda (atau manual admin) → leasing melunasi sisa harga ke seller → jadwal angsuran buyer ke leasing via portal bank (`?installment=`). Rincian dana seller: DP escrow − komisi + pelunasan leasing. Serah terima butuh kredit disetujui.
+- [x] Modul cicilan: tabel jadwal angsuran, status lunas/jatuh tempo/telat + denda 0,2%/hari, halaman admin `/admin/loans` (statistik, filter, setujui, catat setoran manual, "majukan 1 bulan").
+
+Sprint 12 (bisnis & pemantauan):
+
+- [x] Log aktivitas global (`activity_logs`, observer `ModelActivityObserver` di 16 model + login/logout): verifikasi KYC/listing, transaksi, pembayaran, serah terima, dokumen & tanda tangan, pengiriman, kredit & angsuran, payout, bonus, promo. Halaman `/admin/activity` (filter kategori/aktor/tanggal/kata kunci/transaksi/subjek) + timeline per transaksi. Tabel verifikasi (KYC penjual, KYC pembeli, listing) kini menampilkan **semua** data termasuk yang sudah terverifikasi, dengan peninjau, waktu, alasan, dan tautan jejak.
+- [x] Bonus seller: 0,5% per unit + bonus tier (3 → Rp2,5 jt, 5 → Rp5 jt, 10 → Rp15 jt), dibayar bersama payout (`transaction_payouts.bonus_amount`), halaman `/seller/bonus`.
+- [x] Promo buyer: harga coret + badge + hitung mundur di katalog, banner promo, voucher di checkout (potongan persen/nominal, gratis perluasan asuransi, bunga kredit spesial), kuota & periode, dikelola di `/admin/promos`. Subsidi ditanggung platform — hak penjual tidak berkurang.
+- [x] Halaman laporan admin `/admin/reports`: KPI, grafik bulanan & komposisi (SVG ringan tanpa dependensi baru, warna data divalidasi), tabel penjualan/pencairan/bonus/promo/kredit, filter tanggal, ekspor CSV, cetak/simpan PDF.
 
 ## Prioritas & Dependensi
 

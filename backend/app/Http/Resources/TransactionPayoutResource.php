@@ -32,6 +32,7 @@ class TransactionPayoutResource extends JsonResource
             'commission_rate' => $this->commission_rate,
             'commission_amount' => $this->commission_amount,
             'payout_amount' => $this->payout_amount,
+            'bonus_amount' => $this->bonus_amount,
             'reference' => $this->reference,
             'failure_reason' => $this->failure_reason,
             'initiated_by' => $this->initiatedBy?->name,

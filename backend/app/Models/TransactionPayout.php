@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 #[Fillable([
     'transaction_id', 'method', 'status', 'commission_rate', 'commission_amount',
-    'payout_amount', 'reference', 'failure_reason', 'initiated_by', 'paid_at',
+    'payout_amount', 'bonus_amount', 'reference', 'failure_reason', 'initiated_by', 'paid_at',
 ])]
 class TransactionPayout extends Model
 {
@@ -28,6 +28,7 @@ class TransactionPayout extends Model
             'commission_rate' => 'decimal:4',
             'commission_amount' => 'decimal:2',
             'payout_amount' => 'decimal:2',
+            'bonus_amount' => 'decimal:2',
             'paid_at' => 'datetime',
         ];
     }

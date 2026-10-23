@@ -87,7 +87,7 @@
         @endforeach
         <tr class="subtotal"><td colspan="2">Dibayar Pembeli ke Rekening Escrow</td><td class="num">{{ $rp($breakdown['due_now']['total']) }}</td></tr>
         @unless($isFull)
-            <tr><td colspan="2">Sisa pelunasan dibayar langsung kepada Penjual paling lambat saat serah terima</td><td class="num">{{ $rp($breakdown['payment']['remaining_amount']) }}</td></tr>
+            <tr><td colspan="2">Sisa pelunasan {{ ($breakdown['seller_settlement']['remaining_payer'] ?? 'buyer') === 'lender' ? 'dilunasi leasing (' . $breakdown['credit']['lender'] . ') kepada Penjual setelah kredit disetujui' : 'dibayar langsung kepada Penjual paling lambat saat serah terima' }}</td><td class="num">{{ $rp($breakdown['payment']['remaining_amount']) }}</td></tr>
         @endunless
     </table>
     <p class="body">
@@ -125,7 +125,13 @@
     <ol class="body">
         <li>Pajak Kendaraan Bermotor (PKB) dan denda yang terutang sebelum tanggal serah terima menjadi tanggungan Penjual.</li>
         <li>Biaya balik nama dan registrasi (BBN-KB, PKB tahun berjalan, SWDKLLJ, PNBP STNK/TNKB/BPKB), diestimasi sebesar
-            {{ $rp($breakdown['registration']['total']) }}, menjadi tanggungan Pembeli dan dibayar langsung ke Samsat.</li>
+            {{ $rp($breakdown['registration']['total']) }}, menjadi tanggungan Pembeli dan
+            @if($breakdown['registration']['in_escrow'] ?? false)
+                dibayar bersama uang muka ke Rekening Escrow, untuk kemudian disetorkan oleh pengelola escrow ke Samsat.
+            @else
+                dibayar langsung ke Samsat.
+            @endif
+        </li>
         <li>Bea meterai atas dokumen yang ditandatangani masing-masing pihak ditanggung oleh pihak yang menandatangani.</li>
     </ol>
 

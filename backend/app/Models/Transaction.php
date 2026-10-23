@@ -20,12 +20,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
     'vehicle_id', 'buyer_id', 'seller_id', 'amount', 'payment_gateway', 'payment_status',
     'payment_method', 'payment_channel', 'payment_account_masked', 'payment_payer_name', 'payment_approval_code',
     'payment_scheme', 'dp_percent', 'vehicle_price',
-    'insurance_type', 'insurance_premium', 'insurance_addons', 'insurance_policy_number', 'price_breakdown',
+    'insurance_type', 'insurance_premium', 'insurance_addons', 'insurance_policy_number', 'promo_code', 'price_breakdown',
     'buyer_address', 'buyer_phone', 'buyer_notes',
     'invoice_number',
     'bank_transfer_bank', 'bank_transfer_account_number', 'bank_transfer_account_holder',
     'gateway_reference', 'gateway_invoice_url', 'paid_at', 'expires_at',
-    'escrow_status', 'buyer_confirmed_at', 'seller_confirmed_at', 'escrow_status_before_dispute',
+    'escrow_status', 'handover_requested_at', 'handover_approved_at', 'handover_approved_by',
+    'buyer_confirmed_at', 'seller_confirmed_at', 'escrow_status_before_dispute',
     'dispute_reason', 'disputed_by', 'disputed_at',
     'dispute_resolution_note', 'dispute_resolved_by', 'dispute_resolved_at',
     'cancellation_reason', 'cancelled_by', 'cancelled_at',
@@ -44,6 +45,9 @@ class Transaction extends Model
         'paid_at' => null,
         'expires_at' => null,
         'escrow_status' => null,
+        'handover_requested_at' => null,
+        'handover_approved_at' => null,
+        'handover_approved_by' => null,
         'buyer_confirmed_at' => null,
         'seller_confirmed_at' => null,
         'escrow_status_before_dispute' => null,
@@ -57,6 +61,7 @@ class Transaction extends Model
         'price_breakdown' => null,
         'insurance_addons' => null,
         'insurance_policy_number' => null,
+        'promo_code' => null,
         'payment_method' => null,
         'payment_channel' => null,
         'payment_account_masked' => null,
@@ -80,6 +85,8 @@ class Transaction extends Model
             'paid_at' => 'datetime',
             'expires_at' => 'datetime',
             'escrow_status' => EscrowStatus::class,
+            'handover_requested_at' => 'datetime',
+            'handover_approved_at' => 'datetime',
             'buyer_confirmed_at' => 'datetime',
             'seller_confirmed_at' => 'datetime',
             'disputed_at' => 'datetime',
@@ -104,6 +111,11 @@ class Transaction extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function handoverApprovedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'handover_approved_by');
     }
 
     public function disputedBy(): BelongsTo
@@ -139,5 +151,10 @@ class Transaction extends Model
     public function shipment(): HasOne
     {
         return $this->hasOne(Shipment::class);
+    }
+
+    public function loan(): HasOne
+    {
+        return $this->hasOne(VehicleLoan::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\EscrowStatus;
+use App\Enums\TransactionDocumentType;
 use App\Enums\UserRole;
 use App\Enums\VehicleStatus;
 use App\Models\Transaction;
@@ -51,7 +52,7 @@ class EscrowStateMachineTest extends TestCase
         $this->actingAs($otherSeller)->getJson("/api/seller/transactions/{$transaction->id}")->assertForbidden();
     }
 
-    public function test_buyer_and_seller_confirm_handover_then_admin_approves_transition_to_serah_terima(): void
+    public function test_handover_requires_seller_request_and_admin_approval_before_vehicle_moves(): void
     {
         $admin = User::factory()->create(['role' => UserRole::Admin]);
         $buyer = User::factory()->create(['role' => UserRole::Buyer]);
@@ -59,29 +60,64 @@ class EscrowStateMachineTest extends TestCase
         $vehicle = Vehicle::factory()->approved()->create(['seller_id' => $seller->id]);
         $transaction = Transaction::factory()->escrowHold()->for($vehicle)->create(['buyer_id' => $buyer->id, 'seller_id' => $seller->id]);
 
-        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover")
-            ->assertUnprocessable();
+        // Belum disetujui: penjual belum boleh menyerahkan, admin belum bisa menyetujui tanpa pengajuan.
+        $this->actingAs($seller)->postJson("/api/seller/transactions/{$transaction->id}/confirm-handover")->assertConflict();
+        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover")->assertUnprocessable();
 
-        $this->actingAs($buyer)->postJson("/api/buyer/transactions/{$transaction->id}/confirm-handover")
+        $this->actingAs($seller)->postJson("/api/seller/transactions/{$transaction->id}/request-handover")
             ->assertOk()
             ->assertJsonPath('data.escrow_status', 'escrow_hold');
+        $this->actingAs($seller)->postJson("/api/seller/transactions/{$transaction->id}/request-handover")->assertConflict();
 
-        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover")
-            ->assertUnprocessable();
-
-        $this->actingAs($seller)->postJson("/api/seller/transactions/{$transaction->id}/confirm-handover")
-            ->assertOk();
-
-        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover", ['note' => 'Sudah dicek dokumen fisik.'])
+        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover", ['note' => 'Dokumen lengkap.'])
             ->assertOk()
             ->assertJsonPath('data.escrow_status', 'serah_terima');
 
+        $this->assertDatabaseHas('transactions', ['id' => $transaction->id, 'handover_approved_by' => $admin->id]);
         $this->assertDatabaseHas('transaction_status_histories', [
             'transaction_id' => $transaction->id,
             'from_status' => 'escrow_hold',
             'to_status' => 'serah_terima',
             'actor_id' => $admin->id,
         ]);
+
+        // Pembeli baru bisa konfirmasi terima setelah penjual menyerahkan.
+        $this->actingAs($buyer)->postJson("/api/buyer/transactions/{$transaction->id}/confirm-handover")->assertConflict();
+        $this->actingAs($seller)->postJson("/api/seller/transactions/{$transaction->id}/confirm-handover")->assertOk();
+        $this->actingAs($buyer)->postJson("/api/buyer/transactions/{$transaction->id}/confirm-handover")->assertOk();
+
+        $this->assertNotNull($transaction->fresh()->buyer_confirmed_at);
+    }
+
+    public function test_buyer_cannot_request_handover(): void
+    {
+        $buyer = User::factory()->create(['role' => UserRole::Buyer]);
+        $transaction = Transaction::factory()->escrowHold()->create(['buyer_id' => $buyer->id]);
+
+        $this->actingAs($buyer)->postJson("/api/seller/transactions/{$transaction->id}/request-handover")->assertForbidden();
+    }
+
+    public function test_admin_cannot_approve_handover_while_spa_is_unsigned(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+        $transaction = Transaction::factory()->escrowHold()->create(['handover_requested_at' => now()]);
+        $transaction->documents()->create([
+            'type' => TransactionDocumentType::SalesPurchaseAgreement,
+            'path' => 'transactions/spa.pdf',
+            'generated_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-handover")
+            ->assertUnprocessable()
+            ->assertJsonFragment(['message' => 'Syarat serah terima belum terpenuhi: '.TransactionDocumentType::SalesPurchaseAgreement->label().' ditandatangani penjual & pembeli.']);
+    }
+
+    public function test_payout_release_requires_both_parties_to_confirm_handover(): void
+    {
+        $admin = User::factory()->create(['role' => UserRole::Admin]);
+        $transaction = Transaction::factory()->handoverApproved()->create();
+
+        $this->actingAs($admin)->postJson("/api/admin/transactions/{$transaction->id}/approve-payout")->assertUnprocessable();
     }
 
     public function test_full_happy_path_from_escrow_hold_to_selesai(): void

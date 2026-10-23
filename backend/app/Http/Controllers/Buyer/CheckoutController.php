@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Buyer;
 
+use App\Credit\CreditService;
 use App\Documents\DocumentGenerator;
 use App\Enums\BuyerProfileStatus;
 use App\Enums\PaymentGatewayDriver;
@@ -15,12 +16,13 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Payments\PaymentGateway;
+use App\Promotions\PromoService;
 use App\Support\InvoiceNumber;
 use App\Support\PriceBreakdownCalculator;
 
 class CheckoutController extends Controller
 {
-    public function store(CheckoutRequest $request, Vehicle $vehicle, PaymentGateway $gateway, DocumentGenerator $docs, PriceBreakdownCalculator $pricing): TransactionResource
+    public function store(CheckoutRequest $request, Vehicle $vehicle, PaymentGateway $gateway, DocumentGenerator $docs, PriceBreakdownCalculator $pricing, PromoService $promos): TransactionResource
     {
         $this->authorize('checkout', $vehicle);
 
@@ -30,7 +32,7 @@ class CheckoutController extends Controller
 
         $scheme = $request->scheme();
         $insuranceType = $request->insuranceType();
-        $breakdown = $pricing->forVehicle($vehicle, $scheme, (float) $request->validated('dp_percent'), $insuranceType, $request->insuranceAddons());
+        $breakdown = $pricing->forVehicle($vehicle, $scheme, (float) $request->validated('dp_percent'), $insuranceType, $request->insuranceAddons(), $request->tenorMonths(), $request->promotions());
 
         $escrowBank = config('payment.escrow_bank');
 
@@ -49,6 +51,7 @@ class CheckoutController extends Controller
             'buyer_address' => $request->validated('buyer_address'),
             'buyer_phone' => $request->validated('buyer_phone'),
             'buyer_notes' => $request->validated('buyer_notes'),
+            'promo_code' => $request->promoCode(),
             'bank_transfer_bank' => $escrowBank['bank'] ?? null,
             'bank_transfer_account_number' => $escrowBank['account_number'] ?? null,
             'bank_transfer_account_holder' => $escrowBank['account_holder'] ?? null,
@@ -70,10 +73,12 @@ class CheckoutController extends Controller
         // Auto-generated saat checkout selesai (Epic 7 + Sprint 10): invoice, SPA, rincian harga, SPPA.
         $docs->generateCheckoutDocuments($transaction);
 
+        $promos->redeem($transaction, $breakdown, $request->user());
+
         return new TransactionResource($transaction->load('vehicle.photos'));
     }
 
-    public function refreshStatus(Transaction $transaction, PaymentGateway $gateway, EscrowStateMachine $escrow, DocumentGenerator $docs): TransactionResource
+    public function refreshStatus(Transaction $transaction, PaymentGateway $gateway, EscrowStateMachine $escrow, DocumentGenerator $docs, CreditService $credit): TransactionResource
     {
         $this->authorize('view', $transaction);
 
@@ -88,6 +93,7 @@ class CheckoutController extends Controller
             if ($status === TransactionPaymentStatus::Paid) {
                 $escrow->holdFunds($transaction);
                 $docs->generatePaidDocuments($transaction);
+                $credit->openApplication($transaction);
             }
         }
 

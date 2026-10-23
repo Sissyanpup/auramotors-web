@@ -427,3 +427,48 @@
 
 - Baik: snapshot rincian harga membuat kontrak tidak berubah walau tarif di config diubah; pratinjau checkout memanggil kalkulator backend yang sama sehingga tidak ada duplikasi rumus di frontend.
 - Perlu diperbaiki: `npm run lint` gagal karena `eslint-config-next@14` tidak cocok dengan flat config ESLint 9 (pre-existing); 6 test lama perlu diperbarui.
+
+---
+
+## Sprint 11 — Revisi Dosen 16 Okt: Alur Serah Terima, Sidebar Admin & Keuangan (Epic 11)
+
+- Tanggal mulai: 2026-10-23
+- Tanggal selesai: (berjalan)
+
+**Sprint Planning**
+
+- Item backlog: Epic 11 bagian Sprint 11 di `docs/06-product-backlog.md`. Keputusan hasil diskusi: bunga kredit flat 8–12% per tahun (dosen tidak memberi angka), kredit lewat leasing fiktif, simulasi waktu "majukan 1 bulan" boleh, bonus seller 0,5% + tier, promo dengan teknik harga coret, syarat persetujuan serah terima mengikuti usulan.
+- Definition of Done: kendaraan tidak bisa diserahkan/dikirim sebelum admin menyetujui; biaya balik nama ada di tagihan DP dan tidak ikut ke payout seller; test PHPUnit + `next build` lolos.
+
+**Selama Sprint (Daily Progress Check)**
+
+- 2026-10-23: Backend — migration `handover_requested_at`, `handover_approved_at`, `handover_approved_by`. `EscrowStateMachine`: `requestHandover()`, `handoverChecklist()`, `approveHandover()` dengan guard checklist, `confirmHandover()` hanya di `serah_terima` (seller dulu, baru buyer), `approvePayoutRelease()` butuh konfirmasi kedua pihak + BAST bertanda tangan. Bill of Sale pindah ke saat buyer konfirmasi terima. Shipment hanya bisa diinisiasi setelah persetujuan. Notifikasi navbar disesuaikan (admin dapat notifikasi pengajuan serah terima).
+- 2026-10-23: `PriceBreakdownCalculator` versi 2: biaya balik nama masuk `due_now`, field `registration.in_escrow`. `PayoutService` memakai `price_breakdown.payment.dp_amount` sebagai basis komisi. Teks PDF (Rincian Harga, SPA Pasal 6, Surat Kuasa Balik Nama) mengikuti.
+- 2026-10-23: Frontend — `AdminSidebar` + layout admin dua kolom; `HandoverProgress` (stepper 5 langkah) di halaman buyer/seller/admin; tombol "Ajukan Serah Terima" dengan modal konfirmasi berlapis; checklist syarat di admin; tracker GPS mulai saat seller memberangkatkan.
+- 2026-10-23: Verifikasi — 146 test, 140 lolos; 6 gagal sama dengan sebelum sprint (`CheckoutTest`, `AuthenticationTest`, `XenditIntegrationTest`). `tsc --noEmit` & `next build` bersih.
+- 2026-10-23: Upgrade Next.js 16.4.0 → 16.4.2 (celah critical RCE/DoS) + `eslint-config-next` 14 → 16.4.2 supaya cocok dengan flat config ESLint 9; `npm run lint` kembali bisa jalan (sisa 5 error + 1 warning pre-existing).
+- 2026-10-23: Kredit leasing — `config/pricing.php` `credit` (bunga flat 8–12%/th per tenor, surcharge umur unit, provisi, admin, fidusia, denda 0,2%/hari, jeda auto-approve). `PaymentScheme::Credit`; `PriceBreakdownCalculator::creditPlan()` (asuransi th-2 dst. dibiayai, angsuran dibulatkan ke ratusan, bunga efektif via bisection); biaya kredit di muka masuk `due_now`; `seller_settlement.remaining_payer = lender`. Tabel `vehicle_loans` + `loan_installments`, `App\Credit\CreditService` (openApplication di 3 titik pembayaran masuk, syncAutoApproval lazy tanpa queue, approve → jadwal angsuran ADDB, pay berurutan + denda, advanceClock, summary). Checklist serah terima menambah syarat "kredit disetujui". PDF Rincian Harga/SPA/Kuitansi menyebut leasing sebagai pelunas sisa harga.
+- 2026-10-23: Frontend — checkout mode "Kredit Leasing" (DP 20–50%, tenor + angsuran per bulan, asuransi wajib), `PriceBreakdownPanel` bagian rencana kredit + kolom bunga efektif, `CreditPanel` di halaman buyer/seller/admin (refresh otomatis saat jeda analisis selesai), portal bank mode angsuran, halaman `/admin/loans` + menu sidebar.
+- 2026-10-23: Verifikasi — 9 test baru `CreditLoanTest`. Full suite 154 test, 148 lolos; 6 gagal sama dengan sebelumnya. `tsc`, `next build` bersih.
+
+---
+
+## Sprint 12 — Log Aktivitas, Bonus Penjual, Promo Pembeli & Laporan (Epic 11, bagian 2)
+
+- Tanggal mulai: 2026-10-23
+- Tanggal selesai: (berjalan)
+
+**Sprint Planning**
+
+- Item backlog: Epic 11 bagian Sprint 12. Tambahan dari pengguna: semua proses (termasuk verifikasi) masuk log aktivitas, dan tabel verifikasi tetap menampilkan data yang sudah terverifikasi supaya jejaknya terlihat.
+- Definition of Done: setiap perubahan status penting tercatat beserta aktor (atau "Sistem"); bonus muncul otomatis saat payout; promo mengurangi tagihan pembeli tanpa mengurangi hak penjual; laporan bisa diekspor; test PHPUnit + `next build` lolos.
+
+**Selama Sprint (Daily Progress Check)**
+
+- 2026-10-23: Log aktivitas — tabel `activity_logs` (aktor, peran, kategori, aksi, deskripsi, subjek morph, transaction_id, properties tanpa path/nomor identitas/rekening, IP). `ActivityLogger` (+ `asSystem()` untuk proses otomatis seperti persetujuan kredit setelah jeda) dan satu `ModelActivityObserver` yang memetakan perubahan 16 model ke kalimat manusia. Endpoint `GET /api/admin/activity-logs` dengan filter & hitungan per kategori.
+- 2026-10-23: Bonus — `config/payout.php` `bonus`, `SellerBonusService` dipanggil dari `PayoutService` setelah pencairan berhasil; tabel `seller_bonuses`, kolom `transaction_payouts.bonus_amount`, endpoint `GET /api/seller/bonuses`.
+- 2026-10-23: Promo — tabel `promos` + `promo_redemptions`, kolom `transactions.promo_code`. `PromoService` (kelayakan: periode, kuota, harga minimal, merek, skema, jenis asuransi; promo auto terbaik + satu voucher). Kalkulator: gratis perluasan dipasang ke polis lalu disubsidi, potongan bunga ke `creditPlan()`, bagian `promotions` di snapshot. Katalog menampilkan `promo` (harga coret). CRUD admin + `GET /api/promos` publik. `PromoSeeder` berisi 4 promo contoh.
+- 2026-10-23: Laporan — `GET /api/admin/reports` (KPI, deret bulanan, status escrow, skema bayar, merek terlaris, status verifikasi, 5 tabel). Agregasi di PHP supaya sama di SQLite/MySQL/PostgreSQL.
+- 2026-10-23: Frontend — halaman `/admin/activity`, `/admin/promos`, `/admin/reports`, `/seller/bonus`; tabel verifikasi KYC penjual/pembeli & listing ditulis ulang (default "Semua", kolom peninjau + tautan jejak, paginasi); timeline aktivitas di detail transaksi admin; harga coret + banner promo di katalog; input voucher di checkout; bagian promo di Rincian Harga. Grafik memakai SVG sendiri (tanpa Recharts) dengan warna data `#b08a2e` yang lolos validator dataviz di permukaan gelap.
+- 2026-10-23: Verifikasi — 8 test baru `ActivityBonusPromoTest`. Full suite 162 test, 156 lolos; 6 gagal sama dengan sebelumnya. `tsc`, `next build` bersih; lint hanya menyisakan masalah lama.
+

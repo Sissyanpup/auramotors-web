@@ -29,6 +29,7 @@ class ShipmentController extends Controller
     {
         $this->authorize('view', $transaction);
         abort_if($transaction->shipment !== null, 409, 'Shipment sudah diinisiasi untuk transaksi ini.');
+        abort_if($transaction->handover_approved_at === null, 409, 'Serah terima belum disetujui admin — kendaraan belum boleh diberangkatkan.');
 
         $data = $request->safe()->except('cargo_certificate');
         $data['transaction_id'] = $transaction->id;

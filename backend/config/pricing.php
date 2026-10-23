@@ -102,21 +102,56 @@ return [
     'stamp_duty_per_document' => 10_000,
 
     /*
-    | Simulasi kredit (ilustrasi pembiayaan bank/leasing untuk sisa pelunasan).
-    | Bunga flat per tahun. Belum dipakai sebagai metode bayar sungguhan —
-    | hanya pembanding agar pembeli paham opsi cicilan.
+    | Kredit kendaraan lewat leasing (simulasi). Tarif disusun dari kisaran
+    | umum kredit mobil bekas di Indonesia (sekitar 7–9% flat/tahun untuk
+    | tenor 5 tahun, lebih tinggi untuk unit tua) — revisi dosen 16 Okt 2026
+    | karena tarif sebelumnya (5,5–7,5%) terlalu rendah.
+    |
+    | Alur: pembeli bayar DP + biaya kredit di muka ke escrow → leasing
+    | menyetujui → leasing melunasi sisa harga ke penjual → pembeli mencicil
+    | ke leasing (angsuran dibayar di belakang / ADDB, mulai bulan depan).
     */
     'credit' => [
-        'lender_name' => env('CREDIT_LENDER_NAME', 'Bank Aura Nusantara (Simulasi)'),
-        'provision_rate' => 0.01,
-        'admin_fee' => 1_000_000,
+        'lender_name' => env('CREDIT_LENDER_NAME', 'PT Aura Finance Indonesia (Simulasi)'),
+        'min_dp_percent' => 20,
+        'dp_options' => [20, 25, 30, 40, 50],
+
+        // Bunga flat per tahun per tenor (bulan).
         'flat_rates' => [
-            12 => 0.055,
-            24 => 0.060,
-            36 => 0.065,
-            48 => 0.070,
-            60 => 0.075,
+            12 => 0.08,
+            24 => 0.09,
+            36 => 0.10,
+            48 => 0.11,
+            60 => 0.12,
         ],
+
+        // Tambahan bunga untuk unit tua (umur = tahun berjalan − tahun produksi).
+        'age_surcharges' => [
+            ['min_age' => 11, 'rate' => 0.02],
+            ['min_age' => 6, 'rate' => 0.01],
+        ],
+
+        'provision_rate' => 0.01,
+        'admin_fee' => 1_500_000,
+
+        // Jaminan fidusia: honor notaris + PNBP pendaftaran berjenjang menurut nilai pinjaman.
+        'fiducia' => [
+            'notary_fee' => 750_000,
+            'pnbp_tiers' => [
+                50_000_000 => 50_000,
+                100_000_000 => 100_000,
+                250_000_000 => 200_000,
+                500_000_000 => 400_000,
+                1_000_000_000 => 800_000,
+            ],
+            'pnbp_max' => 1_600_000,
+        ],
+
+        // Denda keterlambatan per hari dari nilai angsuran.
+        'late_fee_daily_rate' => 0.002,
+
+        // Jeda persetujuan otomatis leasing (detik) — seolah-olah sedang dianalisis.
+        'auto_approve_seconds' => (int) env('CREDIT_AUTO_APPROVE_SECONDS', 60),
     ],
 
 ];

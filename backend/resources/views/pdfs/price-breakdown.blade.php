@@ -41,9 +41,9 @@
         <tr><td>Skema pembayaran</td><td class="num">{{ $isFull ? 'Bayar penuh' : 'DP ' . $pct($breakdown['payment']['dp_percent']) }}</td></tr>
         <tr class="subtotal"><td>Dibayar sekarang ke rekening escrow</td><td class="num">{{ $rp($breakdown['due_now']['total']) }}</td></tr>
         @unless($isFull)
-            <tr><td>Sisa pelunasan langsung ke Penjual saat serah terima</td><td class="num">{{ $rp($breakdown['payment']['remaining_amount']) }}</td></tr>
+            <tr><td>Sisa pelunasan {{ ($breakdown['seller_settlement']['remaining_payer'] ?? 'buyer') === 'lender' ? 'dilunasi leasing (' . $breakdown['credit']['lender'] . ') kepada Penjual setelah kredit disetujui' : 'langsung ke Penjual saat serah terima' }}</td><td class="num">{{ $rp($breakdown['payment']['remaining_amount']) }}</td></tr>
         @endunless
-        <tr><td>Estimasi biaya balik nama (dibayar Pembeli ke Samsat)</td><td class="num">{{ $rp($breakdown['registration']['total']) }}</td></tr>
+        <tr><td>Estimasi biaya balik nama ({{ ($breakdown['registration']['in_escrow'] ?? false) ? 'sudah termasuk tagihan escrow di atas' : 'dibayar Pembeli ke Samsat' }})</td><td class="num">{{ $rp($breakdown['registration']['total']) }}</td></tr>
         <tr class="subtotal"><td>Total biaya kepemilikan tahun pertama (Pembeli)</td><td class="num">{{ $rp($breakdown['total_cost_of_ownership']['total']) }}</td></tr>
         <tr class="subtotal"><td>Dana bersih yang diterima Penjual</td><td class="num">{{ $rp($seller['total_net']) }}</td></tr>
     </table>
@@ -110,13 +110,29 @@
         <tr><td>Dikurangi biaya layanan escrow</td><td class="basis">{{ $seller['commission_basis'] }}</td><td class="num">&minus; {{ $rp($seller['commission']) }}</td></tr>
         <tr class="subtotal"><td colspan="2">Dicairkan dari escrow ke rekening Penjual</td><td class="num">{{ $rp($seller['net_from_escrow']) }}</td></tr>
         @unless($isFull)
-            <tr><td colspan="2">Ditambah sisa pelunasan langsung dari Pembeli</td><td class="num">{{ $rp($seller['direct_remaining']) }}</td></tr>
+            <tr><td colspan="2">Ditambah sisa pelunasan {{ ($seller['remaining_payer'] ?? 'buyer') === 'lender' ? 'dari leasing (dibayar sekaligus setelah kredit disetujui)' : 'langsung dari Pembeli' }}</td><td class="num">{{ $rp($seller['direct_remaining']) }}</td></tr>
         @endunless
         <tr class="subtotal"><td colspan="2">Total diterima Penjual</td><td class="num">{{ $rp($seller['total_net']) }}</td></tr>
     </table>
     <p class="disclaimer" style="color:#666; font-size:9px;">{{ $seller['note'] }}</p>
 
-    <h2>G. Simulasi Kredit Sisa Pelunasan (Ilustrasi)</h2>
+    @if(! empty($breakdown['credit']))
+        @php($plan = $breakdown['credit'])
+        <h2>G. Rencana Kredit yang Dipilih</h2>
+        <table class="grid">
+            <tr><td>Pemberi pembiayaan (leasing)</td><td class="num">{{ $plan['lender'] }}</td></tr>
+            <tr><td>Sisa harga kendaraan dibiayai</td><td class="num">{{ $rp($plan['vehicle_financed']) }}</td></tr>
+            <tr><td>Premi asuransi tahun ke-2 dst. ikut dibiayai</td><td class="num">{{ $rp($plan['insurance_financed']) }}</td></tr>
+            <tr class="subtotal"><td>Pokok pinjaman</td><td class="num">{{ $rp($plan['principal']) }}</td></tr>
+            <tr><td>Bunga ({{ $plan['rate_basis'] }})</td><td class="num">{{ $pct($plan['flat_rate'] * 100) }} flat &middot; efektif {{ $pct($plan['effective_rate'] * 100) }}/thn</td></tr>
+            <tr><td>Total bunga {{ $plan['tenor_months'] }} bulan</td><td class="num">{{ $rp($plan['interest_total']) }}</td></tr>
+            <tr class="subtotal"><td>Angsuran per bulan &times; {{ $plan['tenor_months'] }}</td><td class="num">{{ $rp($plan['monthly_installment']) }}</td></tr>
+            <tr><td>Total dibayar ke leasing</td><td class="num">{{ $rp($plan['total_payable']) }}</td></tr>
+        </table>
+        <p class="disclaimer" style="color:#666; font-size:9px;">{{ $plan['note'] }}</p>
+    @endif
+
+    <h2>{{ empty($breakdown['credit']) ? 'G' : 'H' }}. Simulasi Kredit Sisa Pelunasan (Ilustrasi)</h2>
     @if(! $credit['applicable'])
         <p class="body">{{ $credit['note'] }}</p>
     @else
@@ -125,11 +141,12 @@
             Provisi {{ $pct($credit['provision_rate'] * 100) }} ({{ $rp($credit['provision_amount']) }}) + biaya administrasi {{ $rp($credit['admin_fee']) }} dibayar di muka.
         </p>
         <table class="grid">
-            <tr><th>Tenor</th><th class="num">Bunga flat/thn</th><th class="num">Total bunga</th><th class="num">Angsuran/bln</th><th class="num">Angsuran + asuransi</th><th class="num">Total bayar</th></tr>
+            <tr><th>Tenor</th><th class="num">Bunga flat/thn</th><th class="num">Efektif/thn</th><th class="num">Total bunga</th><th class="num">Angsuran/bln</th><th class="num">Angsuran + asuransi</th><th class="num">Total bayar</th></tr>
             @foreach($credit['rows'] as $row)
                 <tr>
                     <td style="white-space:nowrap;">{{ $row['tenor_months'] }} bulan</td>
                     <td class="num">{{ $pct($row['flat_rate'] * 100) }}</td>
+                    <td class="num">{{ isset($row['effective_rate']) ? $pct($row['effective_rate'] * 100) : '-' }}</td>
                     <td class="num">{{ $rp($row['interest_total']) }}</td>
                     <td class="num">{{ $rp($row['monthly_installment']) }}</td>
                     <td class="num">{{ $rp($row['monthly_installment_with_insurance']) }}</td>

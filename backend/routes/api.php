@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BuyerKycController;
+use App\Http\Controllers\Admin\LoanController;
 use App\Http\Controllers\Admin\PayoutReconciliationController;
+use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SellerKycController;
 use App\Http\Controllers\Admin\ShipmentReviewController;
 use App\Http\Controllers\Admin\TransactionReviewController;
@@ -13,13 +17,16 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Buyer\BuyerProfileController;
 use App\Http\Controllers\Buyer\CheckoutController;
+use App\Http\Controllers\Buyer\InstallmentController;
 use App\Http\Controllers\BuyerProfileDocumentController;
+use App\Http\Controllers\Catalog\PromoListController;
 use App\Http\Controllers\Catalog\VehicleCatalogController;
 use App\Http\Controllers\Catalog\VehicleQuoteController;
 use App\Http\Controllers\NavbarSummaryController;
 use App\Http\Controllers\Payments\MockPaymentController;
 use App\Http\Controllers\Payments\XenditWebhookController;
 use App\Http\Controllers\Seller\SellerBankAccountController;
+use App\Http\Controllers\Seller\SellerBonusController;
 use App\Http\Controllers\Seller\SellerProfileController;
 use App\Http\Controllers\Seller\VehicleController;
 use App\Http\Controllers\Seller\VehicleDocumentUploadController;
@@ -80,8 +87,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/vehicles/{vehicle}/vin-checks', [VehicleVinCheckController::class, 'store'])->name('vehicles.vin-checks.store');
 
         // Seller — tracking & serah-terima transaksi penjualan
+        // Bonus keberhasilan menjual (Epic 11).
+        Route::get('/bonuses', [SellerBonusController::class, 'index'])->name('bonuses.index');
+
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
         Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
+        Route::post('/transactions/{transaction}/request-handover', [TransactionController::class, 'requestHandover'])->name('transactions.request-handover');
         Route::post('/transactions/{transaction}/confirm-handover', [TransactionController::class, 'confirmHandover'])->name('transactions.confirm-handover');
         Route::post('/transactions/{transaction}/dispute', [TransactionController::class, 'dispute'])->name('transactions.dispute');
     });
@@ -108,6 +119,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/payouts/reconciliation', [PayoutReconciliationController::class, 'index'])->name('payouts.reconciliation');
 
+        // Kredit leasing & cicilan (Epic 11).
+        Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
+        Route::get('/loans/{loan}', [LoanController::class, 'show'])->name('loans.show');
+        Route::post('/loans/{loan}/approve', [LoanController::class, 'approve'])->name('loans.approve');
+        Route::post('/loans/{loan}/advance-clock', [LoanController::class, 'advanceClock'])->name('loans.advance-clock');
+        Route::post('/installments/{installment}/record-payment', [LoanController::class, 'recordPayment'])->name('installments.record-payment');
+
+        // Log aktivitas, promo, dan laporan (Epic 11 — Sprint 12).
+        Route::get('/activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+        Route::get('/promos', [PromoController::class, 'index'])->name('promos.index');
+        Route::post('/promos', [PromoController::class, 'store'])->name('promos.store');
+        Route::put('/promos/{promo}', [PromoController::class, 'update'])->name('promos.update');
+        Route::delete('/promos/{promo}', [PromoController::class, 'destroy'])->name('promos.destroy');
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+
         // Shipment state transitions — admin only (Epic 9).
         Route::post('/transactions/{transaction}/shipment/mark-logistics-prep', [ShipmentReviewController::class, 'markLogisticsPrep'])->name('shipments.mark-logistics-prep');
         Route::post('/transactions/{transaction}/shipment/mark-in-transit', [ShipmentReviewController::class, 'markInTransit'])->name('shipments.mark-in-transit');
@@ -129,6 +155,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/transactions/{transaction}/confirm-handover', [TransactionController::class, 'confirmHandover'])->name('transactions.confirm-handover');
         Route::post('/transactions/{transaction}/dispute', [TransactionController::class, 'dispute'])->name('transactions.dispute');
         Route::post('/vehicles/{vehicle}/checkout', [CheckoutController::class, 'store'])->name('vehicles.checkout');
+
+        // Angsuran kredit — dibayar ke leasing lewat portal bank simulasi.
+        Route::get('/installments/{installment}', [InstallmentController::class, 'show'])->name('installments.show');
+        Route::post('/installments/{installment}/pay', [InstallmentController::class, 'pay'])->name('installments.pay');
     });
 
     // Simulasi pembayaran offline (gateway "mock") — lihat App\Payments\MockGateway.
@@ -175,3 +205,4 @@ Route::get('/vehicles', [VehicleCatalogController::class, 'index'])->name('catal
 Route::get('/vehicles/{vehicle}', [VehicleCatalogController::class, 'show'])->name('catalog.show');
 // Simulasi rincian harga (DP, asuransi + perluasan, pajak, biaya balik nama, kredit).
 Route::get('/vehicles/{vehicle}/quote', VehicleQuoteController::class)->name('catalog.quote');
+Route::get('/promos', PromoListController::class)->name('catalog.promos');

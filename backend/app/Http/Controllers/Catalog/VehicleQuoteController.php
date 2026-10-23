@@ -29,6 +29,8 @@ class VehicleQuoteController extends Controller
                     (float) $request->validated('dp_percent'),
                     $insuranceType,
                     $request->insuranceAddons(),
+                    $request->tenorMonths(),
+                    $request->promotions(),
                 ),
                 'available_addons' => $pricing->availableAddons($insuranceType, (float) $vehicle->price),
             ],

@@ -51,10 +51,24 @@ class TransactionFactory extends Factory
         ]);
     }
 
-    public function serahTerima(): static
+    /**
+     * Admin sudah mengizinkan serah terima, tapi kendaraan belum diserahkan.
+     */
+    public function handoverApproved(): static
     {
         return $this->escrowHold()->state(fn () => [
             'escrow_status' => EscrowStatus::SerahTerima,
+            'handover_requested_at' => now(),
+            'handover_approved_at' => now(),
+        ]);
+    }
+
+    /**
+     * Serah terima tuntas: penjual sudah menyerahkan & pembeli sudah menerima.
+     */
+    public function serahTerima(): static
+    {
+        return $this->handoverApproved()->state(fn () => [
             'buyer_confirmed_at' => now(),
             'seller_confirmed_at' => now(),
         ]);
