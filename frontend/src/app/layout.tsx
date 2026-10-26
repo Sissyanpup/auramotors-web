@@ -46,7 +46,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col bg-background text-on-surface">
         <AuthProvider>
           <Header />
-          <main className="flex-1">
+          {/* Layout yang butuh tinggi penuh (mis. sidebar admin) menandai dirinya
+              dengan data-fill-main → main jadi flex-col agar anak itu bisa flex-1,
+              tanpa mengubah perilaku mx-auto di halaman lain. */}
+          <main className="flex-1 has-[>[data-fill-main]]:flex has-[>[data-fill-main]]:flex-col">
             <KtpGate>{children}</KtpGate>
           </main>
         </AuthProvider>

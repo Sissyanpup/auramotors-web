@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="flex min-h-full flex-col lg:flex-row">
+    <div data-fill-main className="flex flex-1 flex-col lg:flex-row">
       <AdminSidebar />
       <div className="min-w-0 flex-1">
         <div className="mx-auto max-w-5xl px-4 py-8">{children}</div>
